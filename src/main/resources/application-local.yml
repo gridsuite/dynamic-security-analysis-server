@@ -1,0 +1,23 @@
+server:
+  port: 5039
+
+spring:
+  rabbitmq:
+    addresses: localhost
+    port: 5672
+
+powsybl-ws:
+  database:
+    host: localhost
+
+powsybl:
+  services:
+    network-store-server:
+      base-uri: http://localhost:8080/
+
+gridsuite:
+  services:
+    dynamic-simulation-server:
+      base-uri: http://localhost:5032
+    report-server:
+      base-uri: http://localhost:5028

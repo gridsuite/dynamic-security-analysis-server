@@ -1,0 +1,42 @@
+spring:
+  application:
+    name: dynamic-security-analysis-server
+
+  cloud:
+    function:
+      definition: consumeRun;consumeCancel
+    stream:
+      bindings:
+        consumeRun-in-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}dsa.run
+          group: dsaGroup
+          consumer:
+            concurrency: 2
+        publishRun-out-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}dsa.run
+        publishResult-out-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}dsa.result
+        consumeCancel-in-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}dsa.cancel
+        publishCancel-out-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}dsa.cancel
+        publishStopped-out-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}dsa.stopped
+        publishFailed-out-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}dsa.failed
+        publishCancelFailed-out-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}dsa.cancelfailed
+      output-bindings: publishRun-out-0;publishResult-out-0;publishCancel-out-0;publishStopped-out-0;publishFailed-out-0;publishCancelFailed-out-0
+
+powsybl:
+  services:
+    network-store-server:
+      preloading-strategy: COLLECTION
+
+powsybl-ws:
+  database:
+    name: dynamicsecurityanalysis
+
+# default values for dynamic security analysis providers is "Dynawo"
+dynamic-security-analysis:
+  default-provider: Dynawo
