@@ -13,7 +13,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.DynamicSecurityAnalysisStatus;
 
-import java.io.Serializable;
 import java.util.UUID;
 
 /**
@@ -24,7 +23,7 @@ import java.util.UUID;
 @Table(name = "dynamic_security_analysis_result")
 @NoArgsConstructor
 @Entity
-public class DynamicSecurityAnalysisResultEntity implements Serializable {
+public class DynamicSecurityAnalysisResultEntity {
 
     public DynamicSecurityAnalysisResultEntity(UUID id, DynamicSecurityAnalysisStatus status) {
         this.id = id;
