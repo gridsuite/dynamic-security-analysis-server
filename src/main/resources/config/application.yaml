@@ -28,11 +28,6 @@ spring:
           destination: ${powsybl-ws.rabbitmq.destination.prefix:}dsa.cancelfailed
       output-bindings: publishRun-out-0;publishResult-out-0;publishCancel-out-0;publishStopped-out-0;publishFailed-out-0;publishCancelFailed-out-0
 
-powsybl:
-  services:
-    network-store-server:
-      preloading-strategy: COLLECTION
-
 powsybl-ws:
   database:
     name: dynamicsecurityanalysis
