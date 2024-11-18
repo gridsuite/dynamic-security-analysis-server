@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package org.gridsuite.dynamicsecurityanalysis.server.contexts;
+package org.gridsuite.dynamicsecurityanalysis.server.service.contexts;
 
 import com.powsybl.security.dynamic.DynamicSecurityAnalysisParameters;
 import com.powsybl.ws.commons.computation.dto.ReportInfos;
@@ -24,7 +24,8 @@ import java.util.UUID;
 @Setter
 public class DynamicSecurityAnalysisRunContext extends AbstractComputationRunContext<DynamicSecurityAnalysisParametersInfos> {
 
-    // fields which are enriched in worker service
+    // --- Fields which are enriched in worker service --- //
+
     private Path workDir;
 
     private DynamicSecurityAnalysisParameters dynamicSecurityAnalysisParameters;

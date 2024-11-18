@@ -7,13 +7,13 @@
 package org.gridsuite.dynamicsecurityanalysis.server.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.powsybl.dynamicsimulation.DynamicSimulationProvider;
 import com.powsybl.network.store.client.NetworkStoreService;
+import com.powsybl.security.dynamic.DynamicSecurityAnalysisProvider;
 import com.powsybl.ws.commons.computation.service.AbstractComputationService;
 import com.powsybl.ws.commons.computation.service.NotificationService;
 import com.powsybl.ws.commons.computation.service.UuidGeneratorService;
-import org.gridsuite.dynamicsecurityanalysis.server.contexts.DynamicSecurityAnalysisResultContext;
-import org.gridsuite.dynamicsecurityanalysis.server.contexts.DynamicSecurityAnalysisRunContext;
+import org.gridsuite.dynamicsecurityanalysis.server.service.contexts.DynamicSecurityAnalysisResultContext;
+import org.gridsuite.dynamicsecurityanalysis.server.service.contexts.DynamicSecurityAnalysisRunContext;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.DynamicSecurityAnalysisStatus;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.ComponentScan;
@@ -53,8 +53,8 @@ public class DynamicSecurityAnalysisService extends AbstractComputationService<D
     }
 
     public List<String> getProviders() {
-        return DynamicSimulationProvider.findAll().stream()
-                .map(DynamicSimulationProvider::getName)
+        return DynamicSecurityAnalysisProvider.findAll().stream()
+                .map(DynamicSecurityAnalysisProvider::getName)
                 .toList();
     }
 }
