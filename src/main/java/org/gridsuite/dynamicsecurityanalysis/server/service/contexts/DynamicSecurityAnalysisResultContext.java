@@ -10,14 +10,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.ws.commons.computation.dto.ReportInfos;
 import com.powsybl.ws.commons.computation.service.AbstractResultContext;
-import org.gridsuite.dynamicsecurityanalysis.server.dto.DynamicSecurityAnalysisParametersInfos;
+import org.gridsuite.dynamicsecurityanalysis.server.dto.dynamicsimulation.DynamicSimulationParametersInfos;
+import org.gridsuite.dynamicsecurityanalysis.server.dto.parameters.DynamicSecurityAnalysisParametersInfos;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 
 import java.io.UncheckedIOException;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 import static com.powsybl.ws.commons.computation.service.NotificationService.*;
 import static com.powsybl.ws.commons.computation.utils.MessageUtils.getNonNullHeader;
@@ -27,8 +26,20 @@ import static com.powsybl.ws.commons.computation.utils.MessageUtils.getNonNullHe
  */
 public class DynamicSecurityAnalysisResultContext extends AbstractResultContext<DynamicSecurityAnalysisRunContext> {
 
+    private static final String HEADER_DYNAMIC_SIMULATION_RESULT_UUID = "dynamicSimulationResultUuid";
+    private static final String HEADER_DYNAMIC_SIMULATION_PARAMETERS_INFOS = "dynamicSimulationParametersInfos";
+    private static final String HEADER_CONTINGENCY_LIST_NAMES = "contingencyListNames";
+
     public DynamicSecurityAnalysisResultContext(UUID resultUuid, DynamicSecurityAnalysisRunContext runContext) {
         super(resultUuid, runContext);
+    }
+
+    private static List<String> getHeaderList(MessageHeaders headers, String name) {
+        String header = (String) headers.get(name);
+        if (header == null || header.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return Arrays.asList(header.split(","));
     }
 
     public static DynamicSecurityAnalysisResultContext fromMessage(Message<String> message, ObjectMapper objectMapper) {
@@ -65,12 +76,36 @@ public class DynamicSecurityAnalysisResultContext extends AbstractResultContext<
             .build();
 
         // specific headers for dynamic simulation
+        UUID dynamicSimulationResultUuid = UUID.fromString(getNonNullHeader(headers, HEADER_DYNAMIC_SIMULATION_RESULT_UUID));
+        List<String> contingencyListNames = getHeaderList(headers, HEADER_CONTINGENCY_LIST_NAMES);
+
+        DynamicSimulationParametersInfos dynamicSimulationParametersInfos;
+        try {
+            dynamicSimulationParametersInfos = objectMapper.readValue(getNonNullHeader(headers, HEADER_DYNAMIC_SIMULATION_PARAMETERS_INFOS),
+                    DynamicSimulationParametersInfos.class);
+        } catch (JsonProcessingException e) {
+            throw new UncheckedIOException(e);
+        }
+
+        runContext.setDynamicSimulationResultUuid(dynamicSimulationResultUuid);
+        runContext.setDynamicSimulationParametersInfos(dynamicSimulationParametersInfos);
+        runContext.setContingencyListNames(contingencyListNames);
 
         return new DynamicSecurityAnalysisResultContext(resultUuid, runContext);
     }
 
     @Override
-    public Map<String, String> getSpecificMsgHeaders(ObjectMapper ignoredObjectMapper) {
-        return Map.of();
+    public Map<String, String> getSpecificMsgHeaders(ObjectMapper objectMapper) {
+
+        String jsonDynamicSimulationParametersInfos;
+        try {
+            jsonDynamicSimulationParametersInfos = objectMapper.writeValueAsString(getRunContext().getDynamicSimulationParametersInfos());
+        } catch (JsonProcessingException e) {
+            throw new UncheckedIOException(e);
+        }
+
+        return Map.of(HEADER_DYNAMIC_SIMULATION_RESULT_UUID, getRunContext().getDynamicSimulationResultUuid().toString(),
+                HEADER_DYNAMIC_SIMULATION_PARAMETERS_INFOS, jsonDynamicSimulationParametersInfos,
+                HEADER_CONTINGENCY_LIST_NAMES, String.join(",", getRunContext().getContingencyListNames()));
     }
 }

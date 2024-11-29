@@ -29,8 +29,15 @@ public class RestResponseEntityExceptionHandler {
 
         DynamicSecurityAnalysisException.Type type = exception.getType();
         return switch (type) {
-            case RESULT_UUID_NOT_FOUND
+            case RESULT_UUID_NOT_FOUND,
+                 DYNAMIC_SIMULATION_RESULT_UUID_NOT_FOUND,
+                 PROVIDER_NOT_FOUND,
+                 CONTINGENCIES_NOT_FOUND,
+                 PARAMETERS_UUID_NOT_FOUND
                     -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(exception.getMessage());
+            case URI_SYNTAX,
+                 DUMP_FILE_ERROR
+                    -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(exception.getMessage());
         };
     }
 

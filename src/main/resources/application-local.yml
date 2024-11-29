@@ -16,7 +16,9 @@ powsybl:
 
 gridsuite:
   services:
-    dynamic-simulation-server:
-      base-uri: http://localhost:5032
+    actions-server:
+      base-uri: http://localhost:5022
     report-server:
       base-uri: http://localhost:5028
+    dynamic-simulation-server:
+      base-uri: http://localhost:5032

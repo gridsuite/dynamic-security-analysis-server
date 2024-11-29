@@ -13,6 +13,8 @@ import org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisExcep
 import org.gridsuite.dynamicsecurityanalysis.server.dto.DynamicSecurityAnalysisStatus;
 import org.gridsuite.dynamicsecurityanalysis.server.entities.DynamicSecurityAnalysisResultEntity;
 import org.gridsuite.dynamicsecurityanalysis.server.repositories.DynamicSecurityAnalysisResultRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -26,6 +28,8 @@ import static org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalys
  */
 @Service
 public class DynamicSecurityAnalysisResultService extends AbstractComputationResultService<DynamicSecurityAnalysisStatus> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DynamicSecurityAnalysisResultService.class);
+
     public static final String MSG_RESULT_UUID_NOT_FOUND = "Result uuid not found: ";
 
     private final DynamicSecurityAnalysisResultRepository resultRepository;
@@ -50,6 +54,14 @@ public class DynamicSecurityAnalysisResultService extends AbstractComputationRes
         resultEntities.forEach(resultEntity -> resultEntity.setStatus(status));
         // save entities into database
         return resultRepository.saveAllAndFlush(resultEntities).stream().map(DynamicSecurityAnalysisResultEntity::getId).toList();
+    }
+
+    @Transactional
+    public void updateResult(UUID resultUuid, DynamicSecurityAnalysisStatus status) {
+        LOGGER.debug("Update dynamic simulation [resultUuid={}, status={}", resultUuid, status);
+        DynamicSecurityAnalysisResultEntity resultEntity = resultRepository.findById(resultUuid)
+               .orElseThrow(() -> new DynamicSecurityAnalysisException(RESULT_UUID_NOT_FOUND, MSG_RESULT_UUID_NOT_FOUND + resultUuid));
+        resultEntity.setStatus(status);
     }
 
     @Override

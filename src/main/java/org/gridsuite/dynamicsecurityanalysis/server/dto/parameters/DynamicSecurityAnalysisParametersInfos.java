@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.gridsuite.dynamicsecurityanalysis.server.dto;
+package org.gridsuite.dynamicsecurityanalysis.server.dto.parameters;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -24,8 +24,10 @@ import lombok.Setter;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DynamicSecurityAnalysisParametersInfos {
     private String provider;
+
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    private Double startTime;
+    private Double scenarioDuration;
+
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    private Double stopTime;
+    private Double contingenciesStartTime;
 }
