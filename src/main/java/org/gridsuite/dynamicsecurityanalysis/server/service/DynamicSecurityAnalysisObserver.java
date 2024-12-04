@@ -20,7 +20,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class DynamicSecurityAnalysisObserver extends AbstractComputationObserver<SecurityAnalysisReport, DynamicSecurityAnalysisParametersInfos> {
 
-    private static final String COMPUTATION_TYPE = "ds";
+    private static final String COMPUTATION_TYPE = "dynamicsecurityanalysis";
 
     public DynamicSecurityAnalysisObserver(@NonNull ObservationRegistry observationRegistry, @NonNull MeterRegistry meterRegistry) {
         super(observationRegistry, meterRegistry);
