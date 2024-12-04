@@ -36,7 +36,9 @@ public class RestResponseEntityExceptionHandler {
                  PARAMETERS_UUID_NOT_FOUND
                     -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(exception.getMessage());
             case URI_SYNTAX,
-                 DUMP_FILE_ERROR
+                 DUMP_FILE_ERROR,
+                 DYNAMIC_MODEL_ERROR,
+                 DYNAMIC_SIMULATION_PARAMETERS_ERROR
                     -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(exception.getMessage());
         };
     }

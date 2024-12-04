@@ -13,8 +13,6 @@ import com.powsybl.contingency.ContingenciesProvider;
 import com.powsybl.contingency.Contingency;
 import com.powsybl.dynamicsimulation.DynamicModelsSupplier;
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
-import com.powsybl.dynawo.DumpFileParameters;
-import com.powsybl.dynawo.DynawoSimulationParameters;
 import com.powsybl.dynawo.suppliers.dynamicmodels.DynamicModelConfig;
 import com.powsybl.dynawo.suppliers.dynamicmodels.DynawoModelsSupplier;
 import com.powsybl.iidm.network.Network;
@@ -29,13 +27,11 @@ import com.powsybl.ws.commons.computation.service.*;
 import org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.DynamicSecurityAnalysisStatus;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.contingency.ContingencyInfos;
-import org.gridsuite.dynamicsecurityanalysis.server.dto.dynamicsimulation.DynamicSimulationParametersInfos;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.parameters.DynamicSecurityAnalysisParametersInfos;
 import org.gridsuite.dynamicsecurityanalysis.server.service.client.ActionsClient;
 import org.gridsuite.dynamicsecurityanalysis.server.service.client.DynamicSimulationClient;
 import org.gridsuite.dynamicsecurityanalysis.server.service.contexts.DynamicSecurityAnalysisResultContext;
 import org.gridsuite.dynamicsecurityanalysis.server.service.contexts.DynamicSecurityAnalysisRunContext;
-import org.gridsuite.dynamicsecurityanalysis.server.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
@@ -123,27 +119,31 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
     public void preRun(DynamicSecurityAnalysisRunContext runContext) {
         super.preRun(runContext);
 
-        // get dynamic simulation parameters
-        DynamicSimulationParametersInfos dynamicSimulationParametersInfos = runContext.getDynamicSimulationParametersInfos();
-
         // get contingencies from actions server
         List<Contingency> contingencies = actionsClient.getContingencyList(runContext.getContingencyListNames(), runContext.getNetworkUuid(), runContext.getVariantId())
                 .stream().map(ContingencyInfos::getContingency)
                 .filter(Objects::nonNull).toList();
+
         // get dump file from dynamic simulation server
         byte[] dynamicSimulationZippedOutputState = dynamicSimulationClient.getOutputState(runContext.getDynamicSimulationResultUuid());
 
         // get dynamic model list from dynamic simulation server
-        List<DynamicModelConfig> dynamicModel = dynamicSimulationClient.getDynamicModel(runContext.getDynamicSimulationResultUuid());
+        byte[] dynamicSimulationZippedDynamicModel = dynamicSimulationClient.getDynamicModel(runContext.getDynamicSimulationResultUuid());
+        List<DynamicModelConfig> dynamicModel = parametersService.unZipDynamicModel(dynamicSimulationZippedDynamicModel, objectMapper);
+
+        // get dynamic simulation parameters from dynamic simulation server
+        byte[] dynamicSimulationZippedParameters = dynamicSimulationClient.getDynamicSimulationParameters(runContext.getDynamicSimulationResultUuid());
+        DynamicSimulationParameters dynamicSimulationParameters = parametersService.unZipDynamicSimulationParameters(dynamicSimulationZippedParameters, objectMapper);
 
         DynamicSecurityAnalysisParametersInfos parametersInfos = runContext.getParameters();
-        // get all dynamic simulation parameters
-        DynamicSecurityAnalysisParameters parameters = parametersService.getDynamicSecurityAnalysisParameters(runContext.getProvider(), parametersInfos);
+
+        // create a new dynamic security analysis parameters
+        DynamicSecurityAnalysisParameters parameters = new DynamicSecurityAnalysisParameters();
+        parameters.setDynamicSimulationParameters(dynamicSimulationParameters);
 
         // set start and stop times
-        DynamicSimulationParameters dynamicSimulationParameters = parameters.getDynamicSimulationParameters();
-        dynamicSimulationParameters.setStartTime(dynamicSimulationParametersInfos.getStopTime());
-        dynamicSimulationParameters.setStopTime(dynamicSimulationParametersInfos.getStopTime() + parametersInfos.getScenarioDuration());
+        parameters.getDynamicSimulationParameters().setStartTime(dynamicSimulationParameters.getStopTime());
+        parameters.getDynamicSimulationParameters().setStopTime(dynamicSimulationParameters.getStopTime() + parametersInfos.getScenarioDuration());
 
         // set contingency start time
         parameters.getDynamicContingenciesParameters().setContingenciesStartTime(parametersInfos.getContingenciesStartTime());
@@ -159,7 +159,7 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
         runContext.setWorkDir(workDir);
 
         // enrich dump parameters
-        setupDumpParameters(workDir, parameters.getDynamicSimulationParameters(), dynamicSimulationZippedOutputState);
+        parametersService.setupDumpParameters(workDir, parameters.getDynamicSimulationParameters(), dynamicSimulationZippedOutputState);
     }
 
     @Override
@@ -206,28 +206,6 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
         // clean working directory
         Path workDir = resultContext.getRunContext().getWorkDir();
         removeWorkingDirectory(workDir);
-    }
-
-    // --- Dump file related methods --- //
-
-    private void setupDumpParameters(Path workDir, DynamicSimulationParameters dynamicSimulationParameters, byte[] zippedOutputState) {
-        Path dumpDir = workDir.resolve("dump");
-        FileUtil.createDirectory(dumpDir);
-        Path dumpFile = unZipDumpFile(dumpDir, zippedOutputState);
-        DynawoSimulationParameters dynawoSimulationParameters = dynamicSimulationParameters.getExtension(DynawoSimulationParameters.class);
-        dynawoSimulationParameters.setDumpFileParameters(DumpFileParameters.createImportDumpFileParameters(dumpDir, dumpFile.getFileName().toString()));
-    }
-
-    private Path unZipDumpFile(Path dumpDir, byte[] zippedOutputState) {
-        Path dumpFile = dumpDir.resolve("outputState.dmp");
-        try {
-            // UNZIP output state
-            Utils.unzip(zippedOutputState, dumpFile);
-        } catch (IOException e) {
-            throw new DynamicSecurityAnalysisException(DUMP_FILE_ERROR, String.format("Error occurred while unzip the output state into a dump file in the directory %s",
-                    dumpDir.toAbsolutePath()));
-        }
-        return dumpFile;
     }
 
     private Path createWorkingDirectory() {

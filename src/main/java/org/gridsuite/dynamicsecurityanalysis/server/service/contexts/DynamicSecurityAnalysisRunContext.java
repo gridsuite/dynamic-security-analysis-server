@@ -14,7 +14,6 @@ import com.powsybl.ws.commons.computation.service.AbstractComputationRunContext;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-import org.gridsuite.dynamicsecurityanalysis.server.dto.dynamicsimulation.DynamicSimulationParametersInfos;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.parameters.DynamicSecurityAnalysisParametersInfos;
 
 import java.nio.file.Path;
@@ -29,24 +28,22 @@ import java.util.UUID;
 public class DynamicSecurityAnalysisRunContext extends AbstractComputationRunContext<DynamicSecurityAnalysisParametersInfos> {
 
     private UUID dynamicSimulationResultUuid;
-    private DynamicSimulationParametersInfos dynamicSimulationParametersInfos;
     private List<String> contingencyListNames;
 
     // --- Fields which are enriched in worker service --- //
 
     private Path workDir;
-    List<Contingency> contingencies;
+    private List<Contingency> contingencies;
     private List<DynamicModelConfig> dynamicModelContent;
     private DynamicSecurityAnalysisParameters dynamicSecurityAnalysisParameters;
 
     @Builder
     public DynamicSecurityAnalysisRunContext(UUID networkUuid, String variantId, String receiver, String provider,
-                                             List<String> contingencyListNames, UUID dynamicSimulationResultUuid, DynamicSimulationParametersInfos dynamicSimulationParametersInfos,
+                                             List<String> contingencyListNames, UUID dynamicSimulationResultUuid,
                                              ReportInfos reportInfos, String userId, DynamicSecurityAnalysisParametersInfos parameters) {
         super(networkUuid, variantId, receiver, reportInfos, userId, provider, parameters);
         this.contingencyListNames = contingencyListNames;
         this.dynamicSimulationResultUuid = dynamicSimulationResultUuid;
-        this.dynamicSimulationParametersInfos = dynamicSimulationParametersInfos;
     }
 }
 

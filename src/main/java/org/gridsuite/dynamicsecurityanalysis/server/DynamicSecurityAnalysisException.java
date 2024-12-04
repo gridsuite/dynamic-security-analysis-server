@@ -22,6 +22,8 @@ public class DynamicSecurityAnalysisException extends RuntimeException {
         CONTINGENCIES_NOT_FOUND,
         PARAMETERS_UUID_NOT_FOUND,
         DUMP_FILE_ERROR,
+        DYNAMIC_MODEL_ERROR,
+        DYNAMIC_SIMULATION_PARAMETERS_ERROR,
     }
 
     private final Type type;

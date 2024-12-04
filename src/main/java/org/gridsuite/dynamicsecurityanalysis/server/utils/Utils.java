@@ -7,6 +7,9 @@
 
 package org.gridsuite.dynamicsecurityanalysis.server.utils;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -47,6 +50,39 @@ public final class Utils {
             while ((length = zipIs.read(buffer)) > 0) {
                 fos.write(buffer, 0, length);
             }
+        }
+    }
+
+    public static <T> T unzip(byte[] zippedBytes, ObjectMapper objectMapper, TypeReference<T> valueTypeRef) throws IOException {
+        try (PipedOutputStream pipedOut = new PipedOutputStream();
+            PipedInputStream pipedIn = new PipedInputStream(pipedOut)) {
+            unzipToPipedStream(zippedBytes, pipedOut);
+            return objectMapper.readValue(pipedIn, valueTypeRef);
+        }
+    }
+
+    public static <T> T unzip(byte[] zippedBytes, ObjectMapper objectMapper, Class<T> valueType) throws IOException {
+        try (PipedOutputStream pipedOut = new PipedOutputStream();
+            PipedInputStream pipedIn = new PipedInputStream(pipedOut)) {
+            unzipToPipedStream(zippedBytes, pipedOut);
+            return objectMapper.readValue(pipedIn, valueType);
+        }
+    }
+
+    private static void unzipToPipedStream(byte[] zippedBytes, PipedOutputStream pipedOut) throws IOException {
+        try (ByteArrayInputStream is = new ByteArrayInputStream(zippedBytes);
+             GZIPInputStream zipIs = new GZIPInputStream(is)) {
+            new Thread(() -> {
+                try {
+                    byte[] buffer = new byte[1024];
+                    int length;
+                    while ((length = zipIs.read(buffer)) > 0) {
+                        pipedOut.write(buffer, 0, length);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }).start();
         }
     }
 }
