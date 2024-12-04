@@ -9,6 +9,7 @@ package org.gridsuite.dynamicsecurityanalysis.server.config;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.powsybl.dynamicsimulation.json.DynamicSimulationParametersJsonModule;
 import com.powsybl.security.dynamic.json.DynamicSecurityAnalysisJsonModule;
 import com.powsybl.ws.commons.computation.ComputationConfig;
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
@@ -39,6 +40,7 @@ public class RestTemplateConfig {
         return builder -> builder
                 .featuresToDisable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
                 .featuresToEnable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS)
-                .modulesToInstall(new DynamicSecurityAnalysisJsonModule());
+                .modulesToInstall(new DynamicSecurityAnalysisJsonModule(),
+                        new DynamicSimulationParametersJsonModule());
     }
 }
