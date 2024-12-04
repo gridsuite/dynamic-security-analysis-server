@@ -46,7 +46,7 @@ public class DynamicSecurityAnalysisService extends AbstractComputationService<D
         UUID resultUuid = uuidGeneratorService.generate();
         resultService.insertStatus(List.of(resultUuid), DynamicSecurityAnalysisStatus.RUNNING);
 
-        // emit a message to launch the security analysis by the worker service
+        // emit a message to launch the dynamic security analysis by the worker service
         Message<String> message = new DynamicSecurityAnalysisResultContext(resultUuid, runContext).toMessage(objectMapper);
         notificationService.sendRunMessage(message);
         return resultUuid;
