@@ -122,6 +122,10 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-ws-commons</artifactId>
         </dependency>
