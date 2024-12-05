@@ -65,14 +65,14 @@ public class DynamicSimulationClient extends AbstractRestClient {
     }
 
     public byte[] getOutputState(UUID dynamicSimulationResultUuid) {
-        return getDynamicSimulationResultElement(dynamicSimulationResultUuid, "outputState");
+        return getDynamicSimulationResultElement(dynamicSimulationResultUuid, "output-state");
     }
 
     public byte[] getDynamicModel(UUID dynamicSimulationResultUuid) {
-        return getDynamicSimulationResultElement(dynamicSimulationResultUuid, "dynamic-model-config");
+        return getDynamicSimulationResultElement(dynamicSimulationResultUuid, "dynamic-model");
     }
 
     public byte[] getDynamicSimulationParameters(UUID dynamicSimulationResultUuid) {
-        return getDynamicSimulationResultElement(dynamicSimulationResultUuid, "dynamic-simulation-parameters");
+        return getDynamicSimulationResultElement(dynamicSimulationResultUuid, "parameters");
     }
 }
