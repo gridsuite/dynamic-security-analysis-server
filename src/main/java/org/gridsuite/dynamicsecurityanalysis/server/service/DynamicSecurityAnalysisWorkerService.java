@@ -120,7 +120,7 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
         super.preRun(runContext);
 
         // get contingencies from actions server
-        List<Contingency> contingencies = actionsClient.getContingencyList(runContext.getContingencyListNames(), runContext.getNetworkUuid(), runContext.getVariantId())
+        List<Contingency> contingencies = actionsClient.getContingencyList(runContext.getParameters().getContingencyListIds(), runContext.getNetworkUuid(), runContext.getVariantId())
                 .stream().map(ContingencyInfos::getContingency)
                 .filter(Objects::nonNull).toList();
 

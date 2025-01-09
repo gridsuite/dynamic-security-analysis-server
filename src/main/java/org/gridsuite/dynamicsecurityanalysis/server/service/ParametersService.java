@@ -53,7 +53,7 @@ public class ParametersService {
 
     public DynamicSecurityAnalysisRunContext createRunContext(UUID networkUuid, String variantId, String receiver,
                                                               String provider, ReportInfos reportInfos, String userId,
-                                                              List<String> contingencyListNames, UUID dynamicSimulationResultUuid,
+                                                              UUID dynamicSimulationResultUuid,
                                                               UUID dynamicSecurityAnalysisParametersUuid) {
 
         // get parameters from the local database
@@ -65,7 +65,6 @@ public class ParametersService {
                 .variantId(variantId)
                 .receiver(receiver)
                 .dynamicSimulationResultUuid(dynamicSimulationResultUuid)
-                .contingencyListNames(contingencyListNames)
                 .reportInfos(reportInfos)
                 .userId(userId)
                 .parameters(dynamicSecurityAnalysisParametersInfos)
@@ -95,7 +94,7 @@ public class ParametersService {
         DynamicSecurityAnalysisParametersEntity entity = dynamicSecurityAnalysisParametersRepository.findById(parametersUuid)
                 .orElseThrow(() -> new DynamicSecurityAnalysisException(PARAMETERS_UUID_NOT_FOUND, MSG_PARAMETERS_UUID_NOT_FOUND + parametersUuid));
 
-        return new DynamicSecurityAnalysisParametersInfos(entity.getProvider(), entity.getScenarioDuration(), entity.getContingenciesStartTime());
+        return new DynamicSecurityAnalysisParametersInfos(entity.getProvider(), entity.getScenarioDuration(), entity.getContingenciesStartTime(), entity.getContingencyListIds());
     }
 
     // --- Dynamic simulation result related methods --- //
@@ -123,7 +122,9 @@ public class ParametersService {
     public List<DynamicModelConfig> unZipDynamicModel(byte[] dynamicSimulationZippedDynamicModel, ObjectMapper objectMapper) {
         try {
             // unzip dynamic model
-            return Utils.unzip(dynamicSimulationZippedDynamicModel, objectMapper, new TypeReference<>() { });
+            List<DynamicModelConfig> dynamicModel = Utils.unzip(dynamicSimulationZippedDynamicModel, objectMapper, new TypeReference<>() { });
+            Utils.postDeserializerDynamicModel(dynamicModel);
+            return dynamicModel;
         } catch (IOException e) {
             throw new DynamicSecurityAnalysisException(DYNAMIC_MODEL_ERROR, "Error occurred while unzip the dynamic model");
         }

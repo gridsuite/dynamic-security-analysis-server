@@ -53,7 +53,7 @@ public class DynamicSecurityAnalysisController {
 
     @PostMapping(value = "/networks/{networkUuid}/run", produces = "application/json")
     @Operation(summary = "run the dynamic security analysis")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Run dynamic simulation")})
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Run dynamic security analysis")})
     public ResponseEntity<UUID> run(@PathVariable("networkUuid") UUID networkUuid,
                                           @RequestParam(name = VARIANT_ID_HEADER, required = false) String variantId,
                                           @RequestParam(name = HEADER_RECEIVER, required = false) String receiver,
@@ -61,7 +61,6 @@ public class DynamicSecurityAnalysisController {
                                           @RequestParam(name = REPORTER_ID_HEADER, required = false) String reportName,
                                           @RequestParam(name = REPORT_TYPE_HEADER, required = false, defaultValue = "DynamicSecurityAnalysis") String reportType,
                                           @RequestParam(name = HEADER_PROVIDER, required = false) String provider,
-                                          @RequestParam(name = "contingencyListName") List<String> contingencyListNames,
                                           @RequestParam(name = "dynamicSimulationResultUuid") UUID dynamicSimulationResultUuid,
                                           @RequestParam(name = "parametersUuid") UUID parametersUuid,
                                           @RequestHeader(HEADER_USER_ID) String userId) {
@@ -73,7 +72,6 @@ public class DynamicSecurityAnalysisController {
             provider,
             ReportInfos.builder().reportUuid(reportId).reporterId(reportName).computationType(reportType).build(),
             userId,
-            contingencyListNames,
             dynamicSimulationResultUuid,
             parametersUuid);
 

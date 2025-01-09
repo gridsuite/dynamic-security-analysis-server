@@ -12,6 +12,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -36,4 +38,13 @@ public class DynamicSecurityAnalysisParametersEntity {
 
     @Column(name = "contingenciesStartTime")
     private Double contingenciesStartTime;
+
+    @ElementCollection
+    @CollectionTable(
+        name = "dynamic_security_analysis_parameters_contingency_list",
+        joinColumns = @JoinColumn(name = "dynamic_security_analysis_parameters_id"),
+        foreignKey = @ForeignKey(name = "dynamic_security_analysis_parameters_id_fk")
+    )
+    @Column(name = "contingency_list_id", nullable = false)
+    private List<UUID> contingencyListIds = new ArrayList<>();
 }

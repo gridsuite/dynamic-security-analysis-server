@@ -14,6 +14,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+import java.util.UUID;
+
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
@@ -30,4 +33,7 @@ public class DynamicSecurityAnalysisParametersInfos {
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Double contingenciesStartTime;
+
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private List<UUID> contingencyListIds;
 }

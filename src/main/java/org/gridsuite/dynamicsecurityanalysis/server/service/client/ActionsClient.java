@@ -46,7 +46,7 @@ public class ActionsClient extends AbstractRestClient {
         super(baseUri, restTemplate, objectMapper);
     }
 
-    public List<ContingencyInfos> getContingencyList(List<String> ids, UUID networkUuid, String variantId) {
+    public List<ContingencyInfos> getContingencyList(List<UUID> ids, UUID networkUuid, String variantId) {
         Objects.requireNonNull(ids);
         Objects.requireNonNull(networkUuid);
         if (ids.isEmpty()) {
@@ -62,7 +62,7 @@ public class ActionsClient extends AbstractRestClient {
         try {
             String url = uriComponents.toUriString();
             ResponseEntity<List<ContingencyInfos>> responseEntity = getRestTemplate()
-                .exchange(url, HttpMethod.GET, null, new ParameterizedTypeReference<List<ContingencyInfos>>() { });
+                .exchange(url, HttpMethod.GET, null, new ParameterizedTypeReference<>() { });
             if (logger.isDebugEnabled()) {
                 logger.debug("Actions REST API called successfully {}", url);
             }

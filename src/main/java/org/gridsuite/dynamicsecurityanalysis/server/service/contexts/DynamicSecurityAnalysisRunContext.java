@@ -28,7 +28,6 @@ import java.util.UUID;
 public class DynamicSecurityAnalysisRunContext extends AbstractComputationRunContext<DynamicSecurityAnalysisParametersInfos> {
 
     private UUID dynamicSimulationResultUuid;
-    private List<String> contingencyListNames;
 
     // --- Fields which are enriched in worker service --- //
 
@@ -39,10 +38,9 @@ public class DynamicSecurityAnalysisRunContext extends AbstractComputationRunCon
 
     @Builder
     public DynamicSecurityAnalysisRunContext(UUID networkUuid, String variantId, String receiver, String provider,
-                                             List<String> contingencyListNames, UUID dynamicSimulationResultUuid,
+                                             UUID dynamicSimulationResultUuid,
                                              ReportInfos reportInfos, String userId, DynamicSecurityAnalysisParametersInfos parameters) {
         super(networkUuid, variantId, receiver, reportInfos, userId, provider, parameters);
-        this.contingencyListNames = contingencyListNames;
         this.dynamicSimulationResultUuid = dynamicSimulationResultUuid;
     }
 }

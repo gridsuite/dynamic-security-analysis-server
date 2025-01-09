@@ -9,10 +9,14 @@ package org.gridsuite.dynamicsecurityanalysis.server.utils;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.powsybl.dynawo.suppliers.Property;
+import com.powsybl.dynawo.suppliers.dynamicmodels.DynamicModelConfig;
+import com.powsybl.iidm.network.TwoSides;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -27,9 +31,22 @@ public final class Utils {
         throw new AssertionError("Utility class should not be instantiated");
     }
 
-    public static byte[] zip(Path filePath) throws IOException {
-        try (InputStream is = Files.newInputStream(filePath);
-             ByteArrayOutputStream os = new ByteArrayOutputStream();
+    public static void postDeserializerDynamicModel(List<DynamicModelConfig> dynamicModelConfigList) {
+        // enum TwoSide have been serialized as a string => when deserialize the value is a string and not enum TwoSide
+        // so need convert from a string to enum
+        dynamicModelConfigList.forEach(dynamicModelConfig -> {
+            dynamicModelConfig.properties().forEach(property -> {
+                if (property.propertyClass() == TwoSides.class) {
+                    Property replaceProperty = new Property(property.name(), TwoSides.valueOf(String.valueOf(property.value())), property.propertyClass());
+                    int currIdx = dynamicModelConfig.properties().indexOf(property);
+                    dynamicModelConfig.properties().set(currIdx, replaceProperty);
+                }
+            });
+        });
+    }
+
+    public static byte[] zip(InputStream is) throws IOException {
+        try (ByteArrayOutputStream os = new ByteArrayOutputStream();
              GZIPOutputStream zipOs = new GZIPOutputStream(os)) {
             byte[] buffer = new byte[1024];
             int length;
@@ -41,48 +58,49 @@ public final class Utils {
         }
     }
 
-    public static void unzip(byte[] zippedBytes, Path filePath) throws IOException {
+    public static byte[] zip(String content) throws IOException {
+        try (InputStream is = new ByteArrayInputStream(content.getBytes())) {
+            return zip(is);
+        }
+    }
+
+    public static byte[] zip(Path filePath) {
+        try (InputStream is = Files.newInputStream(filePath)) {
+            return zip(is);
+        } catch (IOException e) {
+            throw new UncheckedIOException("Error occurred while zipping the file " + filePath.toAbsolutePath(), e);
+        }
+    }
+
+    private static void unzipToStream(byte[] zippedBytes, OutputStream outputStream) throws IOException {
         try (ByteArrayInputStream is = new ByteArrayInputStream(zippedBytes);
-             FileOutputStream fos = new FileOutputStream(new File(filePath.toUri()));
-             GZIPInputStream zipIs = new GZIPInputStream(is)) {
+             GZIPInputStream zipIs = new GZIPInputStream(is);
+             BufferedOutputStream bufferedOut = new BufferedOutputStream(outputStream)) {
             byte[] buffer = new byte[1024];
             int length;
             while ((length = zipIs.read(buffer)) > 0) {
-                fos.write(buffer, 0, length);
+                bufferedOut.write(buffer, 0, length);
             }
         }
     }
 
+    public static void unzip(byte[] zippedBytes, Path filePath) throws IOException {
+        try (FileOutputStream fos = new FileOutputStream(new File(filePath.toUri()))) {
+            unzipToStream(zippedBytes, fos);
+        }
+    }
+
     public static <T> T unzip(byte[] zippedBytes, ObjectMapper objectMapper, TypeReference<T> valueTypeRef) throws IOException {
-        try (PipedOutputStream pipedOut = new PipedOutputStream();
-            PipedInputStream pipedIn = new PipedInputStream(pipedOut)) {
-            unzipToPipedStream(zippedBytes, pipedOut);
-            return objectMapper.readValue(pipedIn, valueTypeRef);
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+            unzipToStream(zippedBytes, bos);
+            return objectMapper.readValue(bos.toByteArray(), valueTypeRef);
         }
     }
 
     public static <T> T unzip(byte[] zippedBytes, ObjectMapper objectMapper, Class<T> valueType) throws IOException {
-        try (PipedOutputStream pipedOut = new PipedOutputStream();
-            PipedInputStream pipedIn = new PipedInputStream(pipedOut)) {
-            unzipToPipedStream(zippedBytes, pipedOut);
-            return objectMapper.readValue(pipedIn, valueType);
-        }
-    }
-
-    private static void unzipToPipedStream(byte[] zippedBytes, PipedOutputStream pipedOut) throws IOException {
-        try (ByteArrayInputStream is = new ByteArrayInputStream(zippedBytes);
-             GZIPInputStream zipIs = new GZIPInputStream(is)) {
-            new Thread(() -> {
-                try {
-                    byte[] buffer = new byte[1024];
-                    int length;
-                    while ((length = zipIs.read(buffer)) > 0) {
-                        pipedOut.write(buffer, 0, length);
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }).start();
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+            unzipToStream(zippedBytes, bos);
+            return objectMapper.readValue(bos.toByteArray(), valueType);
         }
     }
 }

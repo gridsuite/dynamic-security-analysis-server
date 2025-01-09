@@ -15,7 +15,9 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 
 import java.io.UncheckedIOException;
-import java.util.*;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 
 import static com.powsybl.ws.commons.computation.service.NotificationService.*;
 import static com.powsybl.ws.commons.computation.utils.MessageUtils.getNonNullHeader;
@@ -26,18 +28,9 @@ import static com.powsybl.ws.commons.computation.utils.MessageUtils.getNonNullHe
 public class DynamicSecurityAnalysisResultContext extends AbstractResultContext<DynamicSecurityAnalysisRunContext> {
 
     private static final String HEADER_DYNAMIC_SIMULATION_RESULT_UUID = "dynamicSimulationResultUuid";
-    private static final String HEADER_CONTINGENCY_LIST_NAMES = "contingencyListNames";
 
     public DynamicSecurityAnalysisResultContext(UUID resultUuid, DynamicSecurityAnalysisRunContext runContext) {
         super(resultUuid, runContext);
-    }
-
-    private static List<String> getHeaderList(MessageHeaders headers, String name) {
-        String header = (String) headers.get(name);
-        if (header == null || header.isEmpty()) {
-            return Collections.emptyList();
-        }
-        return Arrays.asList(header.split(","));
     }
 
     public static DynamicSecurityAnalysisResultContext fromMessage(Message<String> message, ObjectMapper objectMapper) {
@@ -75,10 +68,8 @@ public class DynamicSecurityAnalysisResultContext extends AbstractResultContext<
 
         // specific headers for dynamic simulation
         UUID dynamicSimulationResultUuid = UUID.fromString(getNonNullHeader(headers, HEADER_DYNAMIC_SIMULATION_RESULT_UUID));
-        List<String> contingencyListNames = getHeaderList(headers, HEADER_CONTINGENCY_LIST_NAMES);
 
         runContext.setDynamicSimulationResultUuid(dynamicSimulationResultUuid);
-        runContext.setContingencyListNames(contingencyListNames);
 
         return new DynamicSecurityAnalysisResultContext(resultUuid, runContext);
     }
@@ -86,7 +77,6 @@ public class DynamicSecurityAnalysisResultContext extends AbstractResultContext<
     @Override
     public Map<String, String> getSpecificMsgHeaders(ObjectMapper objectMapper) {
 
-        return Map.of(HEADER_DYNAMIC_SIMULATION_RESULT_UUID, getRunContext().getDynamicSimulationResultUuid().toString(),
-                HEADER_CONTINGENCY_LIST_NAMES, String.join(",", getRunContext().getContingencyListNames()));
+        return Map.of(HEADER_DYNAMIC_SIMULATION_RESULT_UUID, getRunContext().getDynamicSimulationResultUuid().toString());
     }
 }
