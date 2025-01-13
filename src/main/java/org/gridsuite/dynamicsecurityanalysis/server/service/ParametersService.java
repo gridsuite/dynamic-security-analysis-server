@@ -14,7 +14,9 @@ import com.powsybl.dynamicsimulation.DynamicSimulationProvider;
 import com.powsybl.dynawo.DumpFileParameters;
 import com.powsybl.dynawo.DynawoSimulationParameters;
 import com.powsybl.dynawo.suppliers.dynamicmodels.DynamicModelConfig;
+import com.powsybl.security.dynamic.DynamicSecurityAnalysisParameters;
 import com.powsybl.ws.commons.computation.dto.ReportInfos;
+import jakarta.transaction.Transactional;
 import org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.parameters.DynamicSecurityAnalysisParametersInfos;
 import org.gridsuite.dynamicsecurityanalysis.server.entities.parameters.DynamicSecurityAnalysisParametersEntity;
@@ -57,7 +59,7 @@ public class ParametersService {
                                                               UUID dynamicSecurityAnalysisParametersUuid) {
 
         // get parameters from the local database
-        DynamicSecurityAnalysisParametersInfos dynamicSecurityAnalysisParametersInfos = getDynamicSecurityAnalysisParameters(dynamicSecurityAnalysisParametersUuid);
+        DynamicSecurityAnalysisParametersInfos dynamicSecurityAnalysisParametersInfos = getParameters(dynamicSecurityAnalysisParametersUuid);
 
         // build run context
         DynamicSecurityAnalysisRunContext runContext = DynamicSecurityAnalysisRunContext.builder()
@@ -87,14 +89,6 @@ public class ParametersService {
         }
 
         return runContext;
-    }
-
-    public DynamicSecurityAnalysisParametersInfos getDynamicSecurityAnalysisParameters(UUID parametersUuid) {
-        Objects.requireNonNull(parametersUuid, "Parameters uuid must not be empty");
-        DynamicSecurityAnalysisParametersEntity entity = dynamicSecurityAnalysisParametersRepository.findById(parametersUuid)
-                .orElseThrow(() -> new DynamicSecurityAnalysisException(PARAMETERS_UUID_NOT_FOUND, MSG_PARAMETERS_UUID_NOT_FOUND + parametersUuid));
-
-        return new DynamicSecurityAnalysisParametersInfos(entity.getProvider(), entity.getScenarioDuration(), entity.getContingenciesStartTime(), entity.getContingencyListIds());
     }
 
     // --- Dynamic simulation result related methods --- //
@@ -137,6 +131,71 @@ public class ParametersService {
         } catch (IOException e) {
             throw new DynamicSecurityAnalysisException(DYNAMIC_SIMULATION_PARAMETERS_ERROR, "Error occurred while unzip the dynamic simulation parameters");
         }
+    }
+
+    // --- Dynamic security analysis parameters related methods --- //
+
+    public DynamicSecurityAnalysisParametersInfos getParameters(UUID parametersUuid) {
+        DynamicSecurityAnalysisParametersEntity entity = dynamicSecurityAnalysisParametersRepository.findById(parametersUuid)
+                .orElseThrow(() -> new DynamicSecurityAnalysisException(PARAMETERS_UUID_NOT_FOUND, MSG_PARAMETERS_UUID_NOT_FOUND + parametersUuid));
+
+        return new DynamicSecurityAnalysisParametersInfos(parametersUuid, entity.getProvider(), entity.getScenarioDuration(), entity.getContingenciesStartTime(), entity.getContingencyListIds());
+    }
+
+    public UUID createParameters(DynamicSecurityAnalysisParametersInfos parametersInfos) {
+        return dynamicSecurityAnalysisParametersRepository.save(parametersInfos.toEntity()).getId();
+    }
+
+    public UUID createDefaultParameters() {
+        DynamicSecurityAnalysisParametersInfos defaultParametersInfos = getDefaultParametersValues(defaultProvider);
+        return createParameters(defaultParametersInfos);
+    }
+
+    public DynamicSecurityAnalysisParametersInfos getDefaultParametersValues(String provider) {
+        DynamicSecurityAnalysisParameters defaultConfigParameters = DynamicSecurityAnalysisParameters.load();
+        return DynamicSecurityAnalysisParametersInfos.builder()
+                .provider(provider)
+                .scenarioDuration(5.0)
+                .contingenciesStartTime(defaultConfigParameters.getDynamicContingenciesParameters().getContingenciesStartTime())
+                .contingencyListIds(null)
+                .build();
+    }
+
+    @Transactional
+    public UUID duplicateParameters(UUID sourceParametersUuid) {
+        DynamicSecurityAnalysisParametersEntity entity = dynamicSecurityAnalysisParametersRepository.findById(sourceParametersUuid)
+                .orElseThrow(() -> new DynamicSecurityAnalysisException(PARAMETERS_UUID_NOT_FOUND, MSG_PARAMETERS_UUID_NOT_FOUND + sourceParametersUuid));
+        DynamicSecurityAnalysisParametersInfos duplicatedParametersInfos = entity.toDto();
+        duplicatedParametersInfos.setId(null);
+        return createParameters(duplicatedParametersInfos);
+    }
+
+    public List<DynamicSecurityAnalysisParametersInfos> getAllParameters() {
+        return dynamicSecurityAnalysisParametersRepository.findAll().stream()
+                .map(DynamicSecurityAnalysisParametersEntity::toDto)
+                .toList();
+    }
+
+    @Transactional
+    public void updateParameters(UUID parametersUuid, DynamicSecurityAnalysisParametersInfos parametersInfos) {
+        DynamicSecurityAnalysisParametersEntity entity = dynamicSecurityAnalysisParametersRepository.findById(parametersUuid)
+                .orElseThrow(() -> new DynamicSecurityAnalysisException(PARAMETERS_UUID_NOT_FOUND, MSG_PARAMETERS_UUID_NOT_FOUND + parametersUuid));
+        if (parametersInfos == null) {
+            //if the parameters is null it means it's a reset to defaultValues, but we need to keep the provider because it's updated separately
+            entity.update(getDefaultParametersValues(entity.getProvider()));
+        } else {
+            entity.update(parametersInfos);
+        }
+    }
+
+    public void deleteParameters(UUID parametersUuid) {
+        dynamicSecurityAnalysisParametersRepository.deleteById(parametersUuid);
+    }
+
+    public void updateProvider(UUID parametersUuid, String provider) {
+        DynamicSecurityAnalysisParametersEntity entity = dynamicSecurityAnalysisParametersRepository.findById(parametersUuid)
+                .orElseThrow(() -> new DynamicSecurityAnalysisException(PARAMETERS_UUID_NOT_FOUND, MSG_PARAMETERS_UUID_NOT_FOUND + parametersUuid));
+        entity.setProvider(provider != null ? provider : defaultProvider);
     }
 
 }

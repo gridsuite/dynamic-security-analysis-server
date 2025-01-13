@@ -11,6 +11,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.gridsuite.dynamicsecurityanalysis.server.dto.parameters.DynamicSecurityAnalysisParametersInfos;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,4 +48,29 @@ public class DynamicSecurityAnalysisParametersEntity {
     )
     @Column(name = "contingency_list_id", nullable = false)
     private List<UUID> contingencyListIds = new ArrayList<>();
+
+    public DynamicSecurityAnalysisParametersEntity(DynamicSecurityAnalysisParametersInfos parametersInfos) {
+        assignAttributes(parametersInfos);
+    }
+
+    public void assignAttributes(DynamicSecurityAnalysisParametersInfos parametersInfos) {
+        provider = parametersInfos.getProvider();
+        scenarioDuration = parametersInfos.getScenarioDuration();
+        contingenciesStartTime = parametersInfos.getContingenciesStartTime();
+        contingencyListIds = parametersInfos.getContingencyListIds();
+    }
+
+    public void update(DynamicSecurityAnalysisParametersInfos parametersInfos) {
+        assignAttributes(parametersInfos);
+    }
+
+    public DynamicSecurityAnalysisParametersInfos toDto() {
+        return DynamicSecurityAnalysisParametersInfos.builder()
+                .id(id)
+                .provider(provider)
+                .scenarioDuration(scenarioDuration)
+                .contingencyListIds(contingencyListIds)
+                .build();
+    }
+
 }

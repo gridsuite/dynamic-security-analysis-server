@@ -16,7 +16,6 @@ import com.powsybl.iidm.network.Importers;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.PreloadingStrategy;
-import org.gridsuite.dynamicsecurityanalysis.server.controller.utils.ParameterUtils;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.contingency.ContingencyInfos;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.parameters.DynamicSecurityAnalysisParametersInfos;
 import org.gridsuite.dynamicsecurityanalysis.server.entities.parameters.DynamicSecurityAnalysisParametersEntity;
@@ -35,15 +34,15 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import static com.powsybl.ws.commons.computation.service.AbstractResultContext.VARIANT_ID_HEADER;
 import static com.powsybl.ws.commons.computation.service.NotificationService.HEADER_RESULT_UUID;
 import static com.powsybl.ws.commons.computation.service.NotificationService.HEADER_USER_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.dynamicsecurityanalysis.server.utils.Utils.RESOURCE_PATH_DELIMITER;
 import static org.gridsuite.dynamicsecurityanalysis.server.utils.Utils.zip;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -72,6 +71,7 @@ public class DynamicSecurityAnalysisControllerIEEE14Test extends AbstractDynamic
 
     private static final UUID DYNAMIC_SIMULATION_RESULT_UUID = UUID.randomUUID();
     private static final UUID PARAMETERS_UUID = UUID.randomUUID();
+    private static final UUID CONTINGENCY_UUID = UUID.randomUUID();
 
     @Autowired
     private MockMvc mockMvc;
@@ -138,8 +138,8 @@ public class DynamicSecurityAnalysisControllerIEEE14Test extends AbstractDynamic
 
     @Override
     protected void initActionsClientMock() {
-        doAnswer(invocation -> List.of(new ContingencyInfos(null, Contingency.load("_LOAD__11_EC"))))
-            .when(actionsClient).getContingencyList(any(), eq(NETWORK_UUID), eq(VARIANT_1_ID));
+        when(actionsClient.getContingencyList(anyList(), eq(NETWORK_UUID), eq(VARIANT_1_ID)))
+                .thenReturn(List.of(new ContingencyInfos(null, Contingency.load("_LOAD__11_EC"))));
     }
 
     @Override
@@ -149,8 +149,13 @@ public class DynamicSecurityAnalysisControllerIEEE14Test extends AbstractDynamic
 
     @Override
     protected void initParametersServiceSpy() {
+        DynamicSecurityAnalysisParametersInfos defaultParams = parametersService.getDefaultParametersValues("Dynawo");
+        defaultParams.setScenarioDuration(50.0);
+        defaultParams.setContingenciesStartTime(5.0);
+        defaultParams.setContingencyListIds(List.of(CONTINGENCY_UUID));
+
         // setup spy bean
-        when(parametersService.getDynamicSecurityAnalysisParameters(PARAMETERS_UUID)).thenReturn(ParameterUtils.getDefaultDynamicSecurityAnalysisParameters());
+        when(parametersService.getParameters(PARAMETERS_UUID)).thenReturn(defaultParams);
     }
 
     @Override
@@ -167,18 +172,15 @@ public class DynamicSecurityAnalysisControllerIEEE14Test extends AbstractDynamic
     public void test01GivenCurvesAndEvents() throws Exception {
         String testBaseDir = TEST_CASE_01;
 
-        // prepare parameters
-        DynamicSecurityAnalysisParametersInfos parameters = ParameterUtils.getDefaultDynamicSecurityAnalysisParameters();
-
         //run the dynamic security analysis (on a specific variant with variantId=" + VARIANT_1_ID + ")
         MvcResult result = mockMvc.perform(
                 post("/v1/networks/{networkUuid}/run?"
+                     + "&" + VARIANT_ID_HEADER + "=" + VARIANT_1_ID
                      + "&dynamicSimulationResultUuid=" + DYNAMIC_SIMULATION_RESULT_UUID
                      + "&parametersUuid=" + PARAMETERS_UUID,
                     NETWORK_UUID.toString())
                         .contentType(APPLICATION_JSON)
-                        .header(HEADER_USER_ID, "testUserId")
-                        .content(objectMapper.writeValueAsString(parameters)))
+                        .header(HEADER_USER_ID, "testUserId"))
                                    .andExpect(status().isOk())
                                    .andReturn();
 

@@ -120,7 +120,8 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
         super.preRun(runContext);
 
         // get contingencies from actions server
-        List<Contingency> contingencies = actionsClient.getContingencyList(runContext.getParameters().getContingencyListIds(), runContext.getNetworkUuid(), runContext.getVariantId())
+        List<ContingencyInfos> contingencyList = actionsClient.getContingencyList(runContext.getParameters().getContingencyListIds(), runContext.getNetworkUuid(), runContext.getVariantId());
+        List<Contingency> contingencies = contingencyList
                 .stream().map(ContingencyInfos::getContingency)
                 .filter(Objects::nonNull).toList();
 
@@ -203,9 +204,9 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
     @Override
     protected void clean(AbstractResultContext<DynamicSecurityAnalysisRunContext> resultContext) {
         super.clean(resultContext);
-        // clean working directory
-        Path workDir = resultContext.getRunContext().getWorkDir();
-        removeWorkingDirectory(workDir);
+//        // clean working directory
+//        Path workDir = resultContext.getRunContext().getWorkDir();
+//        removeWorkingDirectory(workDir);
     }
 
     private Path createWorkingDirectory() {
