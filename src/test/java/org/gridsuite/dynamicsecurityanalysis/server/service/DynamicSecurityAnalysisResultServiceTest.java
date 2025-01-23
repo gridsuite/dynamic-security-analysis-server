@@ -50,21 +50,21 @@ class DynamicSecurityAnalysisResultServiceTest {
         // --- insert an entity in the db --- //
         LOGGER.info("Test insert status");
         UUID resultUuid = UUID.randomUUID();
-        dynamicSecurityAnalysisResultService.insertStatus(List.of(resultUuid), DynamicSecurityAnalysisStatus.SUCCEED);
+        dynamicSecurityAnalysisResultService.insertStatus(List.of(resultUuid), DynamicSecurityAnalysisStatus.CONVERGED);
 
         Optional<DynamicSecurityAnalysisResultEntity> insertedResultEntityOpt = resultRepository.findById(resultUuid);
         assertThat(insertedResultEntityOpt).isPresent();
-        LOGGER.info("Expected result status = {}", DynamicSecurityAnalysisStatus.SUCCEED);
+        LOGGER.info("Expected result status = {}", DynamicSecurityAnalysisStatus.CONVERGED);
         LOGGER.info("Actual inserted result status = {}", insertedResultEntityOpt.get().getStatus());
-        assertThat(insertedResultEntityOpt.get().getStatus()).isSameAs(DynamicSecurityAnalysisStatus.SUCCEED);
+        assertThat(insertedResultEntityOpt.get().getStatus()).isSameAs(DynamicSecurityAnalysisStatus.CONVERGED);
 
         // --- get status of the entity -- //
         LOGGER.info("Test find status");
         DynamicSecurityAnalysisStatus status = dynamicSecurityAnalysisResultService.findStatus(resultUuid);
 
-        LOGGER.info("Expected result status = {}", DynamicSecurityAnalysisStatus.SUCCEED);
+        LOGGER.info("Expected result status = {}", DynamicSecurityAnalysisStatus.CONVERGED);
         LOGGER.info("Actual get result status = {}", insertedResultEntityOpt.get().getStatus());
-        assertThat(status).isEqualTo(DynamicSecurityAnalysisStatus.SUCCEED);
+        assertThat(status).isEqualTo(DynamicSecurityAnalysisStatus.CONVERGED);
 
         // --- update the entity --- //
         LOGGER.info("Test update status");
