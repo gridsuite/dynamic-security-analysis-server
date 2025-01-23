@@ -6,7 +6,6 @@
  */
 package org.gridsuite.dynamicsecurityanalysis.server.service.contexts;
 
-import com.powsybl.contingency.Contingency;
 import com.powsybl.dynawo.suppliers.dynamicmodels.DynamicModelConfig;
 import com.powsybl.security.dynamic.DynamicSecurityAnalysisParameters;
 import com.powsybl.ws.commons.computation.dto.ReportInfos;
@@ -14,6 +13,7 @@ import com.powsybl.ws.commons.computation.service.AbstractComputationRunContext;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+import org.gridsuite.dynamicsecurityanalysis.server.dto.contingency.ContingencyInfos;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.parameters.DynamicSecurityAnalysisParametersInfos;
 
 import java.nio.file.Path;
@@ -32,7 +32,7 @@ public class DynamicSecurityAnalysisRunContext extends AbstractComputationRunCon
     // --- Fields which are enriched in worker service --- //
 
     private Path workDir;
-    private List<Contingency> contingencies;
+    private List<ContingencyInfos> contingencies;
     private List<DynamicModelConfig> dynamicModelContent;
     private DynamicSecurityAnalysisParameters dynamicSecurityAnalysisParameters;
 

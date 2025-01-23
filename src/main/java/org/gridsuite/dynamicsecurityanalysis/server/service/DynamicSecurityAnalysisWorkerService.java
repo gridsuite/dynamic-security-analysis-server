@@ -8,6 +8,8 @@ package org.gridsuite.dynamicsecurityanalysis.server.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.io.FileUtil;
+import com.powsybl.commons.report.ReportNode;
+import com.powsybl.commons.report.TypedValue;
 import com.powsybl.computation.ComputationManager;
 import com.powsybl.contingency.ContingenciesProvider;
 import com.powsybl.contingency.Contingency;
@@ -38,6 +40,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -46,6 +49,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import static org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException.Type.DUMP_FILE_ERROR;
@@ -121,9 +125,6 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
 
         // get contingencies from actions server
         List<ContingencyInfos> contingencyList = actionsClient.getContingencyList(runContext.getParameters().getContingencyListIds(), runContext.getNetworkUuid(), runContext.getVariantId());
-        List<Contingency> contingencies = contingencyList
-                .stream().map(ContingencyInfos::getContingency)
-                .filter(Objects::nonNull).toList();
 
         // get dump file from dynamic simulation server
         byte[] dynamicSimulationZippedOutputState = dynamicSimulationClient.getOutputState(runContext.getDynamicSimulationResultUuid());
@@ -150,7 +151,7 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
         parameters.getDynamicContingenciesParameters().setContingenciesStartTime(parametersInfos.getContingenciesStartTime());
 
         // enrich runContext
-        runContext.setContingencies(contingencies);
+        runContext.setContingencies(contingencyList);
         runContext.setDynamicModelContent(dynamicModel);
         runContext.setDynamicSecurityAnalysisParameters(parameters);
 
@@ -164,10 +165,23 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
     }
 
     @Override
+    protected void postRun(DynamicSecurityAnalysisRunContext runContext, AtomicReference<ReportNode> rootReportNode, SecurityAnalysisReport ignoredResult) {
+//        if (runContext.getReportInfos().reportUuid() != null) {
+//            logContingencyEquipmentsNotConnected(runContext);
+//            logContingencyEquipmentsNotFound(runContext);
+//        }
+//        super.postRun(runContext, rootReportNode, ignoredResult);
+    }
+
+    @Override
     public CompletableFuture<SecurityAnalysisReport> getCompletableFuture(DynamicSecurityAnalysisRunContext runContext, String provider, UUID resultUuid) {
 
         DynamicModelsSupplier dynamicModelsSupplier = new DynawoModelsSupplier(runContext.getDynamicModelContent());
-        ContingenciesProvider contingenciesProvider = network -> runContext.getContingencies();
+
+        List<Contingency> contingencies = runContext.getContingencies()
+                .stream().map(ContingencyInfos::getContingency)
+                .filter(Objects::nonNull).toList();
+        ContingenciesProvider contingenciesProvider = network -> contingencies;
 
         DynamicSecurityAnalysisParameters parameters = runContext.getDynamicSecurityAnalysisParameters();
         LOGGER.info("Run dynamic security analysis on network {}, startTime {}, stopTime {}, contingenciesStartTime {}",
@@ -179,8 +193,10 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
                 .setComputationManager(getComputationManager())
                 .setDynamicSecurityAnalysisParameters(parameters)
                 .setReportNode(runContext.getReportNode());
-
+        runContext.setNetwork(null);
         DynamicSecurityAnalysis.Runner runner = DynamicSecurityAnalysis.find(provider);
+        //return CompletableFuture.supplyAsync(() -> SecurityAnalysisReport.empty());
+
         return runner.runAsync(runContext.getNetwork(),
             runContext.getVariantId() != null ? runContext.getVariantId() : VariantManagerConstants.INITIAL_VARIANT_ID,
             dynamicModelsSupplier,
@@ -213,7 +229,7 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
         Path workDir;
         Path localDir = getComputationManager().getLocalDir();
         try {
-            workDir = Files.createTempDirectory(localDir, "dynamic_security_analysis");
+            workDir = Files.createTempDirectory(localDir, "dynamic_security_analysis_");
         } catch (IOException e) {
             throw new DynamicSecurityAnalysisException(DUMP_FILE_ERROR, String.format("Error occurred while creating a working directory inside the local directory %s",
                     localDir.toAbsolutePath()));
@@ -231,5 +247,54 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
         } else {
             LOGGER.info("{}: No working directory to clean", getComputationType());
         }
+    }
+
+    // take from security analysis server
+    private static void logContingencyEquipmentsNotFound(DynamicSecurityAnalysisRunContext runContext) {
+        List<ContingencyInfos> contingencyInfosList = runContext.getContingencies().stream()
+                .filter(contingencyInfos -> !CollectionUtils.isEmpty(contingencyInfos.getNotFoundElements())).toList();
+
+        if (contingencyInfosList.isEmpty()) {
+            return;
+        }
+
+        ReportNode elementsNotFoundSubReporter = runContext.getReportNode().newReportNode()
+                .withMessageTemplate("notFoundEquipments", "Equipments not found")
+                .add();
+
+        contingencyInfosList.forEach(contingencyInfos -> {
+            String elementsIds = String.join(", ", contingencyInfos.getNotFoundElements());
+            elementsNotFoundSubReporter.newReportNode()
+                    .withMessageTemplate("contingencyEquipmentNotFound",
+                            "Cannot find the following equipments ${elementsIds} in contingency ${contingencyId}")
+                    .withUntypedValue("elementsIds", elementsIds)
+                    .withUntypedValue("contingencyId", contingencyInfos.getId())
+                    .withSeverity(TypedValue.WARN_SEVERITY)
+                    .add();
+        });
+    }
+
+    private void logContingencyEquipmentsNotConnected(DynamicSecurityAnalysisRunContext runContext) {
+        List<ContingencyInfos> contingencyInfosList = runContext.getContingencies().stream()
+                .filter(contingencyInfos -> !CollectionUtils.isEmpty(contingencyInfos.getNotConnectedElements())).toList();
+
+        if (contingencyInfosList.isEmpty()) {
+            return;
+        }
+
+        ReportNode elementsNotConnectedSubReporter = runContext.getReportNode().newReportNode()
+                .withMessageTemplate("notConnectedEquipments", "Equipments not connected")
+                .add();
+
+        contingencyInfosList.forEach(contingencyInfos -> {
+            String elementsIds = String.join(", ", contingencyInfos.getNotConnectedElements());
+            elementsNotConnectedSubReporter.newReportNode()
+                    .withMessageTemplate("contingencyEquipmentNotConnected",
+                            "The following equipments ${elementsIds} in contingency ${contingencyId} are not connected")
+                    .withUntypedValue("elementsIds", elementsIds)
+                    .withUntypedValue("contingencyId", contingencyInfos.getId())
+                    .withSeverity(TypedValue.WARN_SEVERITY)
+                    .add();
+        });
     }
 }

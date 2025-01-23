@@ -53,7 +53,7 @@ public class ActionsClient extends AbstractRestClient {
             throw new IllegalArgumentException("List 'ids' must not be null or empty");
         }
         String endPointUrl = buildEndPointUrl(getBaseUri(), API_VERSION, ACTIONS_END_POINT_CONTINGENCY);
-        UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(endPointUrl + "contingency-infos/export")
+        UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(endPointUrl + "/contingency-infos/export")
                 .queryParam("networkUuid", networkUuid.toString())
                 .queryParamIfPresent("variantId", Optional.ofNullable(variantId))
                 .queryParam("ids", ids)

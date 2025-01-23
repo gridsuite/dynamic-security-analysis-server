@@ -93,6 +93,15 @@ public class DynamicSecurityAnalysisParametersController {
         return ResponseEntity.ok().build();
     }
 
+    @GetMapping(value = "/{uuid}/provider", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get provider")
+    @ApiResponse(responseCode = "200", description = "provider were returned")
+    @ApiResponse(responseCode = "404", description = "provider were not found")
+    public ResponseEntity<String> getProvider(
+            @Parameter(description = "parameters UUID") @PathVariable("uuid") UUID parametersUuid) {
+        return ResponseEntity.of(Optional.of(parametersService.getParameters(parametersUuid).getProvider()));
+    }
+
     @PatchMapping(value = "/{uuid}/provider")
     @Operation(summary = "Update provider")
     @ApiResponse(responseCode = "200", description = "provider was updated")

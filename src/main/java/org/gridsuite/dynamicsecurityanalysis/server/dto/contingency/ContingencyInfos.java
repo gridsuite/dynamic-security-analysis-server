@@ -13,6 +13,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.Set;
+
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
@@ -23,9 +25,15 @@ import lombok.Setter;
 public class ContingencyInfos {
     private String id;
     private Contingency contingency;
+    private Set<String> notFoundElements;
+    private Set<String> notConnectedElements;
 
     public ContingencyInfos(Contingency contingency) {
-        this(contingency == null ? null : contingency.getId(), contingency);
+        this(contingency, Set.of(), Set.of());
+    }
+
+    public ContingencyInfos(Contingency contingency, Set<String> notFoundElements, Set<String> notConnectedElements) {
+        this(contingency == null ? null : contingency.getId(), contingency, notFoundElements, notConnectedElements);
     }
 }
 

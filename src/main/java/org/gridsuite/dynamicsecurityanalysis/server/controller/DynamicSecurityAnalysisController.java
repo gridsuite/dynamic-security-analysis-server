@@ -85,9 +85,8 @@ public class DynamicSecurityAnalysisController {
         @ApiResponse(responseCode = "204", description = "Dynamic security analysis status is empty"),
         @ApiResponse(responseCode = "404", description = "Dynamic security analysis result uuid has not been found")})
     public ResponseEntity<DynamicSecurityAnalysisStatus> getStatus(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
-        DynamicSecurityAnalysisStatus result = dynamicSecurityAnalysisResultService.findStatus(resultUuid);
-        return result != null ? ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result) :
-                ResponseEntity.noContent().build();
+        DynamicSecurityAnalysisStatus result = dynamicSecurityAnalysisService.getStatus(resultUuid);
+        return ResponseEntity.ok().body(result);
     }
 
     @PutMapping(value = "/results/invalidate-status", produces = "application/json")

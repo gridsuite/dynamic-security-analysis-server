@@ -80,7 +80,7 @@ public class DynamicSecurityAnalysisResultService extends AbstractComputationRes
     public DynamicSecurityAnalysisStatus findStatus(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
         return resultRepository.findById(resultUuid)
-            .orElseThrow(() -> new DynamicSecurityAnalysisException(RESULT_UUID_NOT_FOUND, MSG_RESULT_UUID_NOT_FOUND + resultUuid))
-            .getStatus();
+            .map(DynamicSecurityAnalysisResultEntity::getStatus)
+            .orElse(null);
     }
 }

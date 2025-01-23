@@ -22,7 +22,6 @@ import java.util.Objects;
 import java.util.UUID;
 
 import static org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException.Type.DYNAMIC_SIMULATION_RESULT_UUID_NOT_FOUND;
-import static org.gridsuite.dynamicsecurityanalysis.server.service.client.utils.UrlUtils.URL_DELIMITER;
 import static org.gridsuite.dynamicsecurityanalysis.server.service.client.utils.UrlUtils.buildEndPointUrl;
 
 /**
@@ -45,8 +44,8 @@ public class DynamicSimulationClient extends AbstractRestClient {
         Objects.requireNonNull(dynamicSimulationResultUuid);
         String endPointUrl = buildEndPointUrl(getBaseUri(), API_VERSION, DYNAMIC_SIMULATION_END_POINT_RESULT);
 
-        UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(endPointUrl + "{resultUuid}" + URL_DELIMITER + resultElementEndpoint)
-                .buildAndExpand(dynamicSimulationResultUuid);
+        UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(endPointUrl + "/{resultUuid}/{resultElementEndpoint}")
+                .buildAndExpand(dynamicSimulationResultUuid, resultElementEndpoint);
 
         // call dynamic-simulation REST API
         try {
