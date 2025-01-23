@@ -14,4 +14,5 @@ public enum DynamicSecurityAnalysisStatus {
     NOT_DONE,
     RUNNING,
     CONVERGED,
-    DIVERGED}
+    DIVERGED
+}
