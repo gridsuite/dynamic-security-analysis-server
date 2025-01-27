@@ -8,6 +8,8 @@ package org.gridsuite.dynamicsecurityanalysis.server.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.io.FileUtil;
+import com.powsybl.commons.report.ReportNode;
+import com.powsybl.commons.report.TypedValue;
 import com.powsybl.computation.ComputationManager;
 import com.powsybl.contingency.ContingenciesProvider;
 import com.powsybl.contingency.Contingency;
@@ -17,12 +19,15 @@ import com.powsybl.dynawo.suppliers.dynamicmodels.DynamicModelConfig;
 import com.powsybl.dynawo.suppliers.dynamicmodels.DynawoModelsSupplier;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
-import com.powsybl.loadflow.LoadFlowResult;
 import com.powsybl.network.store.client.NetworkStoreService;
+import com.powsybl.security.LimitViolation;
+import com.powsybl.security.LimitViolationsResult;
+import com.powsybl.security.PostContingencyComputationStatus;
 import com.powsybl.security.SecurityAnalysisReport;
 import com.powsybl.security.dynamic.DynamicSecurityAnalysis;
 import com.powsybl.security.dynamic.DynamicSecurityAnalysisParameters;
 import com.powsybl.security.dynamic.DynamicSecurityAnalysisRunParameters;
+import com.powsybl.security.results.PostContingencyResult;
 import com.powsybl.ws.commons.computation.service.*;
 import org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.DynamicSecurityAnalysisStatus;
@@ -42,10 +47,10 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 
 import static org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException.Type.DUMP_FILE_ERROR;
@@ -96,10 +101,9 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
 
     public void updateResult(UUID resultUuid, SecurityAnalysisReport result) {
         Objects.requireNonNull(resultUuid);
-
-        DynamicSecurityAnalysisStatus status = result.getResult().getPreContingencyResult().getStatus() == LoadFlowResult.ComponentResult.Status.CONVERGED ?
-                DynamicSecurityAnalysisStatus.CONVERGED :
-                DynamicSecurityAnalysisStatus.DIVERGED;
+        DynamicSecurityAnalysisStatus status = result.getResult().getPostContingencyResults().stream().anyMatch(postContingencyResult -> postContingencyResult.getStatus() == PostContingencyComputationStatus.FAILED) ?
+                DynamicSecurityAnalysisStatus.FAILED :
+                DynamicSecurityAnalysisStatus.SUCCEED;
 
         resultService.updateResult(resultUuid, status);
     }
@@ -112,6 +116,20 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
     @Override
     protected String getComputationType() {
         return COMPUTATION_TYPE;
+    }
+
+    @Override
+    protected void postRun(DynamicSecurityAnalysisRunContext runContext, AtomicReference<ReportNode> rootReportNode, SecurityAnalysisReport securityAnalysisReport) {
+        // TODO remove these reports when powsybl-dynawo implements
+        // enrich infos for contingencies timeline report
+        if (runContext.getReportInfos().reportUuid() != null) {
+            ReportNode dsaReportNode = getReportNode(runContext.getReportNode(), "dsa", String::contains, "");
+            if (dsaReportNode != null) {
+                enrichContingenciesTimelineReport(securityAnalysisReport, dsaReportNode);
+            }
+        }
+
+        super.postRun(runContext, rootReportNode, securityAnalysisReport);
     }
 
     // open the visibility from protected to public to mock in a test where the stop arrives early
@@ -233,6 +251,51 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
         } else {
             LOGGER.info("{}: No working directory to clean", getComputationType());
         }
+    }
+
+    // --- TODO remove these reports when powsybl-dynawo implements --- //
+    private static void enrichContingenciesTimelineReport(SecurityAnalysisReport securityAnalysisReport, ReportNode reportNode) {
+        for (PostContingencyResult postContingencyResult : securityAnalysisReport.getResult().getPostContingencyResults()) {
+            String contingencyId = postContingencyResult.getContingency().getId();
+            List<LimitViolation> limitViolations = Optional.ofNullable(postContingencyResult.getLimitViolationsResult())
+                    .map(LimitViolationsResult::getLimitViolations).orElse(null);
+
+            ReportNode contingencyReportNode = getReportNode(reportNode, "saContingency", String::contains, contingencyId);
+            if (contingencyReportNode != null) {
+                contingencyReportNode.newReportNode()
+                        .withSeverity(postContingencyResult.getStatus() == PostContingencyComputationStatus.CONVERGED ? TypedValue.TRACE_SEVERITY : TypedValue.WARN_SEVERITY)
+                        .withMessageTemplate("saContingencyStatus", "    Status : ${contingencyStatus}")
+                        .withUntypedValue("contingencyStatus", postContingencyResult.getStatus().name()).add();
+                if (limitViolations != null) {
+                    ReportNode limitViolationsReportNode = contingencyReportNode.newReportNode()
+                            .withMessageTemplate("limitViolations", "    Limit Violations")
+                            .add();
+                    for (LimitViolation limitViolation : limitViolations) {
+                        limitViolationsReportNode.newReportNode()
+                                .withSeverity(TypedValue.TRACE_SEVERITY)
+                                .withMessageTemplate("limitViolation", "        Limit Violation => ${limitViolation}")
+                                .withUntypedValue("limitViolation", limitViolation.toString())
+                                .add();
+                    }
+                }
+            }
+        }
+    }
+
+    private static ReportNode getReportNode(ReportNode rootNode, String key, BiPredicate<String, String> messageMatcher, String message) {
+        Deque<ReportNode> deque = new ArrayDeque<>();
+        deque.push(rootNode);
+        while (!deque.isEmpty()) {
+            ReportNode reportNode = deque.pop();
+            if (Objects.equals(reportNode.getMessageKey(), key) && messageMatcher.test(reportNode.getMessage(), message)) {
+                return reportNode;
+            }
+
+            if (reportNode.getChildren() != null) {
+                deque.addAll(reportNode.getChildren());
+            }
+        }
+        return null;
     }
 
 }
