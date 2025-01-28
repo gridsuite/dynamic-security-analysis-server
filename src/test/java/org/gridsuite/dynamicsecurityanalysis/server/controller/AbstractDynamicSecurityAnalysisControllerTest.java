@@ -14,9 +14,8 @@ import org.gridsuite.dynamicsecurityanalysis.server.service.DynamicSecurityAnaly
 import org.gridsuite.dynamicsecurityanalysis.server.service.ParametersService;
 import org.gridsuite.dynamicsecurityanalysis.server.service.client.ActionsClient;
 import org.gridsuite.dynamicsecurityanalysis.server.service.client.DynamicSimulationClient;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -26,7 +25,6 @@ import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
 import org.springframework.cloud.stream.binder.test.TestChannelBinderConfiguration;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
 import java.util.List;
@@ -36,7 +34,6 @@ import static org.mockito.Mockito.when;
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
-@RunWith(SpringRunner.class)
 @AutoConfigureMockMvc
 @SpringBootTest
 @ContextConfiguration(classes = {DynamicSecurityAnalysisApplication.class, TestChannelBinderConfiguration.class})
@@ -66,7 +63,7 @@ public abstract class AbstractDynamicSecurityAnalysisControllerTest extends Abst
     @SpyBean
     protected DynamicSecurityAnalysisWorkerService dynamicSecurityAnalysisWorkerService;
 
-    @Before
+    @BeforeEach
     @Override
     public void setUp() throws IOException {
         super.setUp();
@@ -90,9 +87,9 @@ public abstract class AbstractDynamicSecurityAnalysisControllerTest extends Abst
         initDynamicSecurityAnalysisWorkerServiceSpy();
     }
 
-    @After
+    @AfterEach
     @Override
-    public void tearDown() throws Exception {
+    public void tearDown() {
         super.tearDown();
 
         OutputDestination output = getOutputDestination();

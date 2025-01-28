@@ -10,10 +10,9 @@ package org.gridsuite.dynamicsecurityanalysis.server.controller;
 import com.powsybl.computation.ComputationManager;
 import com.powsybl.computation.local.test.ComputationDockerConfig;
 import com.powsybl.computation.local.test.DockerLocalComputationManager;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -26,26 +25,21 @@ public abstract class AbstractDynawoTest {
 
     private static final String DOCKER_IMAGE_ID = "powsybl/java-dynawo:" + JAVA_DYNAWO_VERSION;
 
-    // TODO wait junit5 to use @TempDir
-    //@TempDir
-    //public final Path localDir;
+    @TempDir
+    public Path localDir;
 
     protected ComputationManager computationManager;
 
-    @Rule
-    public TemporaryFolder tempFolder = new TemporaryFolder();
-
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {
         Path dockerDir = Path.of("/home/powsybl");
         ComputationDockerConfig config = new ComputationDockerConfig()
                 .setDockerImageId(DOCKER_IMAGE_ID);
-        Path localDir = tempFolder.getRoot().toPath();
         computationManager = new DockerLocalComputationManager(localDir, dockerDir, config);
     }
 
-    @After
-    public void tearDown() throws Exception {
+    @AfterEach
+    public void tearDown() {
         computationManager.close();
     }
 }

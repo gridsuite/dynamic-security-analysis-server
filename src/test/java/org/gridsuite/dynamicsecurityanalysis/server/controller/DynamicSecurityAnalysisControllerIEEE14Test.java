@@ -16,10 +16,11 @@ import com.powsybl.iidm.network.Importers;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.PreloadingStrategy;
+import lombok.SneakyThrows;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.contingency.ContingencyInfos;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.parameters.DynamicSecurityAnalysisParametersInfos;
 import org.gridsuite.dynamicsecurityanalysis.server.entities.parameters.DynamicSecurityAnalysisParametersEntity;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.binder.test.InputDestination;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
@@ -158,8 +159,9 @@ public class DynamicSecurityAnalysisControllerIEEE14Test extends AbstractDynamic
         when(parametersService.getParameters(PARAMETERS_UUID)).thenReturn(defaultParams);
     }
 
+    @SneakyThrows
     @Override
-    public void tearDown() throws Exception {
+    public void tearDown() {
         super.tearDown();
 
         // delete all results
@@ -169,7 +171,7 @@ public class DynamicSecurityAnalysisControllerIEEE14Test extends AbstractDynamic
     }
 
     @Test
-    public void test01GivenCurvesAndEvents() throws Exception {
+    void test01GivenCurvesAndEvents() throws Exception {
         String testBaseDir = TEST_CASE_01;
 
         //run the dynamic security analysis (on a specific variant with variantId=" + VARIANT_1_ID + ")
