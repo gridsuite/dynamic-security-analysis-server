@@ -47,14 +47,18 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 
+import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException.Type.DUMP_FILE_ERROR;
 import static org.gridsuite.dynamicsecurityanalysis.server.service.DynamicSecurityAnalysisService.COMPUTATION_TYPE;
+import static org.gridsuite.dynamicsecurityanalysis.server.utils.Utils.*;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -123,7 +127,7 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
         // TODO remove these reports when powsybl-dynawo implements
         // enrich infos for contingencies timeline report
         if (runContext.getReportInfos().reportUuid() != null) {
-            ReportNode dsaReportNode = getReportNode(runContext.getReportNode(), "dsa", String::contains, "");
+            ReportNode dsaReportNode = getReportNode(runContext.getReportNode(), "dsa", null);
             if (dsaReportNode != null) {
                 enrichContingenciesTimelineReport(securityAnalysisReport, dsaReportNode);
             }
@@ -260,42 +264,27 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
             List<LimitViolation> limitViolations = Optional.ofNullable(postContingencyResult.getLimitViolationsResult())
                     .map(LimitViolationsResult::getLimitViolations).orElse(null);
 
-            ReportNode contingencyReportNode = getReportNode(reportNode, "saContingency", String::contains, contingencyId);
+            ReportNode contingencyReportNode = getReportNode(reportNode, "saContingency", String.format("(.*)%s(.*)", contingencyId));
             if (contingencyReportNode != null) {
                 contingencyReportNode.newReportNode()
                         .withSeverity(postContingencyResult.getStatus() == PostContingencyComputationStatus.CONVERGED ? TypedValue.TRACE_SEVERITY : TypedValue.WARN_SEVERITY)
-                        .withMessageTemplate("saContingencyStatus", "    Status : ${contingencyStatus}")
+                        .withMessageTemplate("saContingencyStatus", INDENT_4 + "Status : ${contingencyStatus}")
                         .withUntypedValue("contingencyStatus", postContingencyResult.getStatus().name()).add();
-                if (limitViolations != null) {
+                if (isNotEmpty(limitViolations)) {
                     ReportNode limitViolationsReportNode = contingencyReportNode.newReportNode()
-                            .withMessageTemplate("limitViolations", "    Limit Violations")
+                            .withMessageTemplate("limitViolations", INDENT_4 + "Limit Violations")
                             .add();
                     for (LimitViolation limitViolation : limitViolations) {
                         limitViolationsReportNode.newReportNode()
                                 .withSeverity(TypedValue.TRACE_SEVERITY)
-                                .withMessageTemplate("limitViolation", "        Limit Violation => ${limitViolation}")
+                                .withMessageTemplate("limitViolation", INDENT_8 + "${count}. ${limitViolation}")
+                                .withUntypedValue("count", limitViolations.indexOf(limitViolation) + 1)
                                 .withUntypedValue("limitViolation", limitViolation.toString())
                                 .add();
                     }
                 }
             }
         }
-    }
-
-    private static ReportNode getReportNode(ReportNode rootNode, String key, BiPredicate<String, String> messageMatcher, String message) {
-        Deque<ReportNode> deque = new ArrayDeque<>();
-        deque.push(rootNode);
-        while (!deque.isEmpty()) {
-            ReportNode reportNode = deque.pop();
-            if (Objects.equals(reportNode.getMessageKey(), key) && messageMatcher.test(reportNode.getMessage(), message)) {
-                return reportNode;
-            }
-
-            if (reportNode.getChildren() != null) {
-                deque.addAll(reportNode.getChildren());
-            }
-        }
-        return null;
     }
 
 }
