@@ -7,6 +7,7 @@
 package org.gridsuite.dynamicsecurityanalysis.server.service.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.contingency.ContingencyInfos;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +27,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException.Type.CONTINGENCY_LIST_EMPTY;
 import static org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException.Type.CONTINGENCIES_NOT_FOUND;
 import static org.gridsuite.dynamicsecurityanalysis.server.service.client.utils.UrlUtils.buildEndPointUrl;
 
@@ -47,10 +49,9 @@ public class ActionsClient extends AbstractRestClient {
     }
 
     public List<ContingencyInfos> getContingencyList(List<UUID> ids, UUID networkUuid, String variantId) {
-        Objects.requireNonNull(ids);
         Objects.requireNonNull(networkUuid);
-        if (ids.isEmpty()) {
-            throw new IllegalArgumentException("List 'ids' must not be null or empty");
+        if (CollectionUtils.isEmpty(ids)) {
+            throw new DynamicSecurityAnalysisException(CONTINGENCY_LIST_EMPTY, "Contingency list parameter must not be null or empty");
         }
         String endPointUrl = buildEndPointUrl(getBaseUri(), API_VERSION, ACTIONS_END_POINT_CONTINGENCY);
         UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(endPointUrl + "/contingency-infos/export")

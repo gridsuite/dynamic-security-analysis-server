@@ -38,6 +38,7 @@ public class RestResponseEntityExceptionHandler {
             case URI_SYNTAX,
                  DUMP_FILE_ERROR,
                  DYNAMIC_MODEL_ERROR,
+                 CONTINGENCY_LIST_EMPTY,
                  DYNAMIC_SIMULATION_PARAMETERS_ERROR
                     -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(exception.getMessage());
         };

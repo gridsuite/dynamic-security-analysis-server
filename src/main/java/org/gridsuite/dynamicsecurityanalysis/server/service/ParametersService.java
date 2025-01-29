@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException.Type.*;
@@ -182,7 +183,7 @@ public class ParametersService {
                 .orElseThrow(() -> new DynamicSecurityAnalysisException(PARAMETERS_UUID_NOT_FOUND, MSG_PARAMETERS_UUID_NOT_FOUND + parametersUuid));
         if (parametersInfos == null) {
             //if the parameters is null it means it's a reset to defaultValues, but we need to keep the provider because it's updated separately
-            entity.update(getDefaultParametersValues(entity.getProvider()));
+            entity.update(getDefaultParametersValues(Optional.ofNullable(entity.getProvider()).orElse(defaultProvider)));
         } else {
             entity.update(parametersInfos);
         }

@@ -20,6 +20,7 @@ public class DynamicSecurityAnalysisException extends RuntimeException {
         RESULT_UUID_NOT_FOUND,
         DYNAMIC_SIMULATION_RESULT_UUID_NOT_FOUND,
         CONTINGENCIES_NOT_FOUND,
+        CONTINGENCY_LIST_EMPTY,
         PARAMETERS_UUID_NOT_FOUND,
         DUMP_FILE_ERROR,
         DYNAMIC_MODEL_ERROR,
