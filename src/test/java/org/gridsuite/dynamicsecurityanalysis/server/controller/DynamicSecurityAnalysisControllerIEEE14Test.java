@@ -6,7 +6,6 @@
  */
 package org.gridsuite.dynamicsecurityanalysis.server.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.datasource.ReadOnlyDataSource;
 import com.powsybl.commons.datasource.ResourceDataSource;
@@ -16,7 +15,7 @@ import com.powsybl.iidm.network.Importers;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.PreloadingStrategy;
-import lombok.SneakyThrows;
+import org.gridsuite.dynamicsecurityanalysis.server.dto.DynamicSecurityAnalysisStatus;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.contingency.ContingencyInfos;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.parameters.DynamicSecurityAnalysisParametersInfos;
 import org.gridsuite.dynamicsecurityanalysis.server.entities.parameters.DynamicSecurityAnalysisParametersEntity;
@@ -25,7 +24,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.binder.test.InputDestination;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
 import org.springframework.messaging.Message;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.io.IOException;
@@ -46,7 +44,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -75,16 +72,10 @@ public class DynamicSecurityAnalysisControllerIEEE14Test extends AbstractDynamic
     private static final UUID CONTINGENCY_UUID = UUID.randomUUID();
 
     @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
     private OutputDestination output;
 
     @Autowired
     private InputDestination input;
-
-    @Autowired
-    private ObjectMapper objectMapper;
 
     @Override
     public OutputDestination getOutputDestination() {
@@ -159,19 +150,8 @@ public class DynamicSecurityAnalysisControllerIEEE14Test extends AbstractDynamic
         when(parametersService.getParameters(PARAMETERS_UUID)).thenReturn(defaultParams);
     }
 
-    @SneakyThrows
-    @Override
-    public void tearDown() {
-        super.tearDown();
-
-        // delete all results
-        mockMvc.perform(
-                delete("/v1/results"))
-            .andExpect(status().isOk());
-    }
-
     @Test
-    void test01GivenCurvesAndEvents() throws Exception {
+    void test01IEEE14() throws Exception {
         String testBaseDir = TEST_CASE_01;
 
         //run the dynamic security analysis (on a specific variant with variantId=" + VARIANT_1_ID + ")
@@ -192,97 +172,8 @@ public class DynamicSecurityAnalysisControllerIEEE14Test extends AbstractDynamic
         Message<byte[]> messageSwitch = output.receive(1000 * 40, dsaResultDestination);
         assertThat(messageSwitch.getHeaders()).containsEntry(HEADER_RESULT_UUID, runUuid.toString());
 
-//        // --- CHECK result at abstract level --- //
-//        // expected seriesNames
-//        List<String> expectedSeriesNames = curveInfosList.stream().map(curveInfos -> curveInfos.getEquipmentId() + "_" + curveInfos.getVariableId()).toList();
-//
-//        // get timeseries from mock timeseries db
-//        UUID timeSeriesUuid = TimeSeriesClientTest.TIME_SERIES_UUID;
-//        List<TimeSeries<?, ?>> resultTimeSeries = timeSeriesMockBd.get(timeSeriesUuid);
-//        // result seriesNames
-//        List<String> seriesNames = resultTimeSeries.stream().map(TimeSeries::getMetadata).map(TimeSeriesMetadata::getName).toList();
-//
-//        // compare result only series' names
-//        expectedSeriesNames.forEach(expectedSeriesName -> {
-//            logger.info(String.format("Check time series %s exists or not : %b", expectedSeriesName, seriesNames.contains(expectedSeriesName)));
-//            assertThat(seriesNames).contains(expectedSeriesName);
-//        });
-//
-//        // --- CHECK result at detail level --- //
-//        // prepare expected result to compare
-//        String outputDir = DATA_IEEE14_BASE_DIR +
-//                           RESOURCE_PATH_DELIMITER + testBaseDir +
-//                           RESOURCE_PATH_DELIMITER + OUTPUT;
-//        DynamicSimulationResult expectedResult = DynamicSimulationResultDeserializer.read(getClass().getResourceAsStream(outputDir + RESOURCE_PATH_DELIMITER + RESULT_SIM_JSON));
-//        String jsonExpectedTimeSeries = TimeSeries.toJson(new ArrayList<>(expectedResult.getCurves().values()));
-//
-//        // convert result time series to json
-//        String jsonResultTimeSeries = TimeSeries.toJson(resultTimeSeries);
-//
-//        // export result to file
-//        FileUtils.writeBytesToFile(this, outputDir + RESOURCE_PATH_DELIMITER + "exported_" + RESULT_SIM_JSON, jsonResultTimeSeries.getBytes());
-//
-//        // compare result only timeseries
-//        assertThat(objectMapper.readTree(jsonResultTimeSeries)).isEqualTo(objectMapper.readTree(jsonExpectedTimeSeries));
-//
-//        // check dump file not empty
-//        result = mockMvc.perform(
-//                        get("/v1/results/{resultUuid}/output-state", runUuid))
-//                .andExpect(status().isOk())
-//                .andReturn();
-//        byte[] zippedOutputState = result.getResponse().getContentAsByteArray();
-//
-//        assertThat(zippedOutputState)
-//                .withFailMessage("Expecting Output state of dynamic simulation to be not empty but was empty.")
-//                .isNotEmpty();
-//        logger.info("Size of zipped output state = {} KB ", zippedOutputState.length / 1024);
-//
-//        // export dump file content to manual check
-//        File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource(".")).getFile() +
-//                             outputDir + RESOURCE_PATH_DELIMITER + "outputState.dmp");
-//        Utils.unzip(zippedOutputState, file.toPath());
-//
-//        // check dynamic model persisted in result in gzip format not empty
-//        result = mockMvc.perform(
-//                        get("/v1/results/{resultUuid}/dynamic-model", runUuid))
-//                .andExpect(status().isOk())
-//                .andReturn();
-//        byte[] zippedDynamicModel = result.getResponse().getContentAsByteArray();
-//
-//        assertThat(zippedDynamicModel)
-//                .withFailMessage("Expecting dynamic model of dynamic simulation to be not empty but was empty.")
-//                .isNotEmpty();
-//        logger.info("Size of zipped dynamic model = {} B ", zippedDynamicModel.length);
-//
-//        // export dynamic model in json and dump files to manual check
-//        List<DynamicModelConfig> dynamicModel = Utils.unzip(zippedDynamicModel, objectMapper, new TypeReference<>() { });
-//        String jsonDynamicModel = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(dynamicModel);
-//        FileUtils.writeBytesToFile(this, outputDir + RESOURCE_PATH_DELIMITER + "dynamicModel.json", jsonDynamicModel.getBytes());
-//
-//        file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource(".")).getFile() +
-//                 outputDir + RESOURCE_PATH_DELIMITER + "dynamicModel.dmp");
-//        Utils.unzip(zippedDynamicModel, file.toPath());
-//
-//        // check parameters persisted in result in gzip format not empty
-//        result = mockMvc.perform(
-//                        get("/v1/results/{resultUuid}/parameters", runUuid))
-//                .andExpect(status().isOk())
-//                .andReturn();
-//        byte[] zippedDynamicSimulationParameters = result.getResponse().getContentAsByteArray();
-//
-//        assertThat(zippedDynamicSimulationParameters)
-//                .withFailMessage("Expecting parameters of dynamic simulation to be not empty but was empty.")
-//                .isNotEmpty();
-//        logger.info("Size of zipped parameters = {} KB ", zippedDynamicSimulationParameters.length / 1024);
-//
-//        // export dynamic model in json and dump files to manual check
-//        DynamicSimulationParameters dynamicSimulationParameters = Utils.unzip(zippedDynamicSimulationParameters, objectMapper, DynamicSimulationParameters.class);
-//        String jsonDynamicSimulationParameters = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(dynamicSimulationParameters);
-//        FileUtils.writeBytesToFile(this, outputDir + RESOURCE_PATH_DELIMITER + "dynamicSimulationParameters.json", jsonDynamicSimulationParameters.getBytes());
-//
-//        file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource(".")).getFile() +
-//                        outputDir + RESOURCE_PATH_DELIMITER + "dynamicSimulationParameters.dmp");
-//        Utils.unzip(zippedDynamicSimulationParameters, file.toPath());
+        // --- CHECK result --- //
+        assertResultStatus(runUuid, DynamicSecurityAnalysisStatus.SUCCEED);
 
     }
 }

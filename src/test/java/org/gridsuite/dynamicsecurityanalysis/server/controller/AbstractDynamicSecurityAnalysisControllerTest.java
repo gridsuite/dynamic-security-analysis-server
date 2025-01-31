@@ -6,9 +6,12 @@
  */
 package org.gridsuite.dynamicsecurityanalysis.server.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.network.store.client.NetworkStoreService;
+import lombok.SneakyThrows;
 import org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisApplication;
 import org.gridsuite.dynamicsecurityanalysis.server.controller.utils.TestUtils;
+import org.gridsuite.dynamicsecurityanalysis.server.dto.DynamicSecurityAnalysisStatus;
 import org.gridsuite.dynamicsecurityanalysis.server.repositories.DynamicSecurityAnalysisParametersRepository;
 import org.gridsuite.dynamicsecurityanalysis.server.service.DynamicSecurityAnalysisWorkerService;
 import org.gridsuite.dynamicsecurityanalysis.server.service.ParametersService;
@@ -18,6 +21,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -25,11 +29,18 @@ import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
 import org.springframework.cloud.stream.binder.test.TestChannelBinderConfiguration;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -44,6 +55,12 @@ public abstract class AbstractDynamicSecurityAnalysisControllerTest extends Abst
     protected final String dsaResultDestination = "dsa.result.destination";
     protected final String dsaStoppedDestination = "dsa.stopped.destination";
     protected final String dsaCancelFailedDestination = "dsa.cancelfailed.destination";
+
+    @Autowired
+    protected MockMvc mockMvc;
+
+    @Autowired
+    ObjectMapper objectMapper;
 
     @MockBean
     protected DynamicSimulationClient dynamicSimulationClient;
@@ -87,11 +104,18 @@ public abstract class AbstractDynamicSecurityAnalysisControllerTest extends Abst
         initDynamicSecurityAnalysisWorkerServiceSpy();
     }
 
+    @SneakyThrows
     @AfterEach
     @Override
     public void tearDown() {
         super.tearDown();
 
+        // delete all results
+        mockMvc.perform(
+                        delete("/v1/results"))
+                .andExpect(status().isOk());
+
+        // check messages in rabbitmq
         OutputDestination output = getOutputDestination();
         List<String> destinations = List.of(dsaResultDestination, dsaStoppedDestination, dsaCancelFailedDestination);
 
@@ -119,4 +143,18 @@ public abstract class AbstractDynamicSecurityAnalysisControllerTest extends Abst
         when(dynamicSecurityAnalysisWorkerService.getComputationManager()).thenReturn(computationManager);
     }
 
+    // --- utility methods --- //
+    protected void assertResultStatus(UUID runUuid, DynamicSecurityAnalysisStatus expectedStatus) throws Exception {
+
+        MvcResult result = mockMvc.perform(
+                        get("/v1/results/{resultUuid}/status", runUuid))
+                .andExpect(status().isOk()).andReturn();
+
+        DynamicSecurityAnalysisStatus status = null;
+        if (!result.getResponse().getContentAsString().isEmpty()) {
+            status = objectMapper.readValue(result.getResponse().getContentAsString(), DynamicSecurityAnalysisStatus.class);
+        }
+
+        assertThat(status).isSameAs(expectedStatus);
+    }
 }

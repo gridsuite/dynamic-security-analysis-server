@@ -6,7 +6,6 @@
  */
 package org.gridsuite.dynamicsecurityanalysis.server.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.datasource.ReadOnlyDataSource;
 import com.powsybl.commons.datasource.ResourceDataSource;
 import com.powsybl.commons.datasource.ResourceSet;
@@ -19,12 +18,10 @@ import com.powsybl.security.SecurityAnalysisReport;
 import com.powsybl.security.SecurityAnalysisResult;
 import com.powsybl.security.dynamic.DynamicSecurityAnalysis;
 import com.powsybl.ws.commons.computation.service.NotificationService;
-import lombok.SneakyThrows;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.DynamicSecurityAnalysisStatus;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.contingency.ContingencyInfos;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.parameters.DynamicSecurityAnalysisParametersInfos;
 import org.gridsuite.dynamicsecurityanalysis.server.entities.parameters.DynamicSecurityAnalysisParametersEntity;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +29,6 @@ import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.cloud.stream.binder.test.InputDestination;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
 import org.springframework.messaging.Message;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.io.IOException;
@@ -84,12 +80,6 @@ public class DynamicSecurityAnalysisControllerTest extends AbstractDynamicSecuri
     private static final UUID DYNAMIC_SIMULATION_RESULT_UUID = UUID.randomUUID();
     private static final UUID PARAMETERS_UUID = UUID.randomUUID();
     private static final UUID CONTINGENCY_UUID = UUID.randomUUID();
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    ObjectMapper objectMapper;
 
     @Autowired
     private OutputDestination output;
@@ -172,220 +162,97 @@ public class DynamicSecurityAnalysisControllerTest extends AbstractDynamicSecuri
         when(parametersService.getParameters(PARAMETERS_UUID)).thenReturn(defaultParams);
     }
 
-    @BeforeEach
-    @Override
-    public void setUp() throws IOException {
-        super.setUp();
-    }
+    @Test
+    void testResult() throws Exception {
 
-    @SneakyThrows
-    @Override
-    public void tearDown() {
-        super.tearDown();
+        doReturn(CompletableFuture.completedFuture(new SecurityAnalysisReport(SecurityAnalysisResult.empty())))
+                .when(dynamicSecurityAnalysisWorkerService).getCompletableFuture(any(), any(), any());
+        doReturn(CompletableFuture.completedFuture(new SecurityAnalysisReport(SecurityAnalysisResult.empty())))
+                .when(dynamicSecurityAnalysisWorkerService).getCompletableFuture(any(), any(), isNull());
 
-        // delete all results
+        //run the dynamic security analysis on a specific variant
+        MvcResult result = mockMvc.perform(
+                        post("/v1/networks/{networkUuid}/run?"
+                             + "&" + VARIANT_ID_HEADER + "=" + VARIANT_1_ID
+                             + "&dynamicSimulationResultUuid=" + DYNAMIC_SIMULATION_RESULT_UUID
+                             + "&parametersUuid=" + PARAMETERS_UUID,
+                                NETWORK_UUID.toString())
+                                .contentType(APPLICATION_JSON)
+                                .header(HEADER_USER_ID, "testUserId"))
+                .andExpect(status().isOk())
+                .andReturn();
+        UUID runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
+
+        Message<byte[]> messageSwitch = output.receive(1000 * 10, dsaResultDestination);
+        assertThat(messageSwitch.getHeaders()).containsEntry(HEADER_RESULT_UUID, runUuid.toString());
+
+        //run the dynamic security analysis on the implicit default variant
+        result = mockMvc.perform(
+                        post("/v1/networks/{networkUuid}/run?"
+                             + "&dynamicSimulationResultUuid=" + DYNAMIC_SIMULATION_RESULT_UUID
+                             + "&parametersUuid=" + PARAMETERS_UUID,
+                                NETWORK_UUID.toString())
+                                .contentType(APPLICATION_JSON)
+                                .header(HEADER_USER_ID, "testUserId"))
+                .andExpect(status().isOk())
+                .andReturn();
+        runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
+
+        messageSwitch = output.receive(1000 * 10, dsaResultDestination);
+        assertThat(messageSwitch.getHeaders()).containsEntry(HEADER_RESULT_UUID, runUuid.toString());
+
+        //get the calculation status
+        result = mockMvc.perform(
+                get("/v1/results/{resultUuid}/status", runUuid))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        DynamicSecurityAnalysisStatus status = objectMapper.readValue(result.getResponse().getContentAsString(), DynamicSecurityAnalysisStatus.class);
+
+        //depending on the execution speed it can be both
+        assertThat(status).isIn(DynamicSecurityAnalysisStatus.SUCCEED, DynamicSecurityAnalysisStatus.RUNNING);
+
+        //get the status of a non-existing result and expect null as status
+        assertResultStatus(UUID.randomUUID(), null);
+
+        // test invalidate status => i.e. set NOT_DONE
+        // set NOT_DONE
         mockMvc.perform(
-                        delete("/v1/results"))
+                put("/v1/results/invalidate-status?resultUuid=" + runUuid))
+            .andExpect(status().isOk());
+
+        // check whether NOT_DONE is persisted
+        result = mockMvc.perform(
+                get("/v1/results/{resultUuid}/status", runUuid))
+            .andExpect(status().isOk())
+            .andReturn();
+        DynamicSecurityAnalysisStatus statusAfterInvalidate = objectMapper.readValue(result.getResponse().getContentAsString(), DynamicSecurityAnalysisStatus.class);
+
+        assertThat(statusAfterInvalidate).isSameAs(DynamicSecurityAnalysisStatus.NOT_DONE);
+
+        // set NOT_DONE for none existing result
+        mockMvc.perform(
+                        put("/v1/results/invalidate-status?resultUuid=" + UUID.randomUUID()))
+                .andExpect(status().isNotFound());
+
+        //delete a result
+        mockMvc.perform(
+                delete("/v1/results/{resultUuid}", runUuid))
+            .andExpect(status().isOk());
+
+        //try to get the removed result and expect a not found
+        assertResultStatus(runUuid, null);
+
+        //delete a none existing result
+        mockMvc.perform(
+                        delete("/v1/results/{resultUuid}", UUID.randomUUID()))
                 .andExpect(status().isOk());
+
+        //delete all results and except ok
+        mockMvc.perform(
+                delete("/v1/results"))
+            .andExpect(status().isOk());
     }
-
-//    @Test
-//    public void testGivenTimeSeriesAndTimeLine() throws Exception {
-//
-//        // mock DynamicSimulationWorkerService with time-series and timeline
-//        Map<String, DoubleTimeSeries> curves = new HashMap<>();
-//        TimeSeriesIndex index = new IrregularTimeSeriesIndex(new long[]{32, 64, 128, 256});
-//        curves.put("NETWORK__BUS____2-BUS____5-1_AC_iSide2", TimeSeries.createDouble("NETWORK__BUS____2-BUS____5-1_AC_iSide2", index, 333.847331, 333.847321, 333.847300, 333.847259));
-//        curves.put("NETWORK__BUS____1_TN_Upu_value", TimeSeries.createDouble("NETWORK__BUS____1_TN_Upu_value", index, 1.059970, 1.059970, 1.059970, 1.059970));
-//
-//        List<TimelineEvent> timeLine = List.of(
-//                new TimelineEvent(102479, "CLA_2_5 - CLA", "order to change topology"),
-//                new TimelineEvent(102479, "_BUS____2-BUS____5-1_AC - LINE", "opening both sides"),
-//                new TimelineEvent(102479, "CLA_2_5 - CLA", "order to change topology"),
-//                new TimelineEvent(104396, "CLA_2_4 - CLA", "arming by over-current constraint")
-//        );
-//
-//        Map<String, Double> finalStateValues = new HashMap<>();
-//
-//        doReturn(CompletableFuture.completedFuture(new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", curves, finalStateValues, timeLine)))
-//                .when(dynamicSimulationWorkerService).getCompletableFuture(any(), any(), any());
-//        doReturn(CompletableFuture.completedFuture(new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", curves, finalStateValues, timeLine)))
-//                .when(dynamicSimulationWorkerService).getCompletableFuture(any(), any(), isNull());
-//
-//        // prepare parameters
-//        DynamicSimulationParametersInfos parameters = ParameterUtils.getDefaultDynamicSimulationParameters();
-//
-//        //run the dynamic simulation on a specific variant
-//        MvcResult result = mockMvc.perform(
-//                post("/v1/networks/{networkUuid}/run?variantId=" +
-//                     VARIANT_1_ID + "&mappingName=" + MAPPING_NAME, NETWORK_UUID_STRING)
-//                    .contentType(APPLICATION_JSON)
-//                    .header(HEADER_USER_ID, "testUserId")
-//                    .content(objectMapper.writeValueAsString(parameters)))
-//            .andExpect(status().isOk())
-//            .andReturn();
-//        UUID runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
-//
-//        Message<byte[]> messageSwitch = output.receive(1000 * 10, dsResultDestination);
-//        assertThat(messageSwitch.getHeaders()).containsEntry(HEADER_RESULT_UUID, runUuid.toString());
-//
-//        //run the dynamic simulation on the implicit default variant
-//        result = mockMvc.perform(
-//                post("/v1/networks/{networkUuid}/run?" + "&mappingName=" + MAPPING_NAME, NETWORK_UUID_STRING)
-//                    .contentType(APPLICATION_JSON)
-//                    .header(HEADER_USER_ID, "testUserId")
-//                    .content(objectMapper.writeValueAsString(parameters)))
-//            .andExpect(status().isOk())
-//            .andReturn();
-//
-//        runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
-//
-//        messageSwitch = output.receive(1000 * 10, dsResultDestination);
-//        assertThat(messageSwitch.getHeaders()).containsEntry(HEADER_RESULT_UUID, runUuid.toString());
-//
-//        //get the calculation status
-//        result = mockMvc.perform(
-//                get("/v1/results/{resultUuid}/status", runUuid))
-//            .andExpect(status().isOk())
-//            .andReturn();
-//
-//        DynamicSimulationStatus status = objectMapper.readValue(result.getResponse().getContentAsString(), DynamicSimulationStatus.class);
-//
-//        //depending on the execution speed it can be both
-//        assertThat(status).isIn(DynamicSimulationStatus.CONVERGED, DynamicSimulationStatus.RUNNING);
-//
-//        //get the status of a non-existing simulation and expect a not found
-//        mockMvc.perform(
-//                get("/v1/results/{resultUuid}/status", UUID.randomUUID()))
-//            .andExpect(status().isNotFound());
-//
-//        //get the time-series uuid of a non-existing simulation and expect a not found
-//        mockMvc.perform(
-//                get("/v1/results/{resultUuid}/timeseries", UUID.randomUUID()))
-//            .andExpect(status().isNotFound());
-//
-//        //get the timeline uuid of a non-existing simulation and expect a not found
-//        mockMvc.perform(
-//                        get("/v1/results/{resultUuid}/timeline", UUID.randomUUID()))
-//                .andExpect(status().isNotFound());
-//
-//        //get the result time-series uuid of the calculation
-//        result = mockMvc.perform(
-//                get("/v1/results/{resultUuid}/timeseries", runUuid))
-//            .andExpect(status().isOk())
-//            .andReturn();
-//
-//        // the return content must be a UUID class
-//        assertType(result.getResponse().getContentAsString(), UUID.class, objectMapper);
-//
-//        //get the result timeline uuid of the calculation
-//        result = mockMvc.perform(
-//                get("/v1/results/{resultUuid}/timeline", runUuid))
-//            .andExpect(status().isOk())
-//            .andReturn();
-//
-//        // the return content must be a UUID class
-//        assertType(result.getResponse().getContentAsString(), UUID.class, objectMapper);
-//
-//        // get the ending status of the calculation which must be is converged
-//        result = mockMvc.perform(
-//                get("/v1/results/{resultUuid}/status", runUuid))
-//            .andExpect(status().isOk())
-//            .andReturn();
-//
-//        status = objectMapper.readValue(result.getResponse().getContentAsString(), DynamicSimulationStatus.class);
-//
-//        assertThat(status).isSameAs(DynamicSimulationStatus.CONVERGED);
-//
-//        // test invalidate status => i.e. set NOT_DONE
-//        // set NOT_DONE
-//        mockMvc.perform(
-//                put("/v1/results/invalidate-status?resultUuid=" + runUuid))
-//            .andExpect(status().isOk());
-//
-//        // check whether NOT_DONE is persisted
-//        result = mockMvc.perform(
-//                get("/v1/results/{resultUuid}/status", runUuid))
-//            .andExpect(status().isOk())
-//            .andReturn();
-//        DynamicSimulationStatus statusAfterInvalidate = objectMapper.readValue(result.getResponse().getContentAsString(), DynamicSimulationStatus.class);
-//
-//        assertThat(statusAfterInvalidate).isSameAs(DynamicSimulationStatus.NOT_DONE);
-//
-//        // set NOT_DONE for none existing result
-//        mockMvc.perform(
-//                        put("/v1/results/invalidate-status?resultUuid=" + UUID.randomUUID()))
-//                .andExpect(status().isNotFound());
-//
-//        //delete a result
-//        mockMvc.perform(
-//                delete("/v1/results/{resultUuid}", runUuid))
-//            .andExpect(status().isOk());
-//
-//        //try to get the removed result and except a not found
-//        mockMvc.perform(
-//                get("/v1/results/{resultUuid}/timeseries", runUuid))
-//            .andExpect(status().isNotFound());
-//
-//        //delete a none existing result
-//        mockMvc.perform(
-//                        delete("/v1/results/{resultUuid}", UUID.randomUUID()))
-//                .andExpect(status().isOk());
-//
-//        //delete all results and except ok
-//        mockMvc.perform(
-//                delete("/v1/results"))
-//            .andExpect(status().isOk());
-//    }
-
-//    @Test
-//    public void testGivenEmptyTimeSeriesAndTimeLine() throws Exception {
-//        // mock DynamicSimulationWorkerService without time-series and timeline
-//        Map<String, DoubleTimeSeries> curves = new HashMap<>();
-//        List<TimelineEvent> timeLine = List.of();
-//        Map<String, Double> finalStateValues = new HashMap<>();
-//
-//        doReturn(CompletableFuture.completedFuture(new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", curves, finalStateValues, timeLine)))
-//                .when(dynamicSimulationWorkerService).getCompletableFuture(any(), any(), any());
-//
-//        // prepare parameters
-//        DynamicSimulationParametersInfos parameters = ParameterUtils.getDefaultDynamicSimulationParameters();
-//
-//        //run the dynamic simulation on a specific variant
-//        MvcResult result = mockMvc.perform(
-//                        post("/v1/networks/{networkUuid}/run?variantId=" +
-//                             VARIANT_1_ID + "&mappingName=" + MAPPING_NAME, NETWORK_UUID_STRING)
-//                                .contentType(APPLICATION_JSON)
-//                                .header(HEADER_USER_ID, "testUserId")
-//                                .content(objectMapper.writeValueAsString(parameters)))
-//                .andExpect(status().isOk())
-//                .andReturn();
-//        UUID runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
-//
-//        Message<byte[]> messageSwitch = output.receive(1000, dsResultDestination);
-//        assertThat(messageSwitch.getHeaders()).containsEntry(HEADER_RESULT_UUID, runUuid.toString());
-//
-//        // get the ending status of the calculation which must be is converged
-//        result = mockMvc.perform(
-//                        get("/v1/results/{resultUuid}/status", runUuid))
-//                .andExpect(status().isOk())
-//                .andReturn();
-//
-//        DynamicSimulationStatus status = objectMapper.readValue(result.getResponse().getContentAsString(), DynamicSimulationStatus.class);
-//
-//        assertThat(status).isSameAs(DynamicSimulationStatus.CONVERGED);
-//
-//        //get time-series uuid of the calculation
-//        mockMvc.perform(
-//                        get("/v1/results/{resultUuid}/timeseries", runUuid))
-//                .andExpect(status().isNoContent());
-//
-//        //get timeline uuid of the calculation
-//        mockMvc.perform(
-//                        get("/v1/results/{resultUuid}/timeline", runUuid))
-//                .andExpect(status().isNoContent());
-//
-//    }
 
     // --- BEGIN Test cancelling a running computation ---//
     private void mockSendRunMessage(Supplier<CompletableFuture<?>> runAsyncMock) {
@@ -412,20 +279,6 @@ public class DynamicSecurityAnalysisControllerTest extends AbstractDynamicSecuri
             }
         }))
         .when(notificationService).sendRunMessage(any());
-    }
-
-    private void assertResultStatus(UUID runUuid, DynamicSecurityAnalysisStatus expectedStatus) throws Exception {
-
-        MvcResult result = mockMvc.perform(
-                        get("/v1/results/{resultUuid}/status", runUuid))
-                .andExpect(status().isOk()).andReturn();
-
-        DynamicSecurityAnalysisStatus status = null;
-        if (!result.getResponse().getContentAsString().isEmpty()) {
-            status = objectMapper.readValue(result.getResponse().getContentAsString(), DynamicSecurityAnalysisStatus.class);
-        }
-
-        assertThat(status).isSameAs(expectedStatus);
     }
 
     private UUID runAndCancel(CountDownLatch cancelLatch, int cancelDelay) throws Exception {
