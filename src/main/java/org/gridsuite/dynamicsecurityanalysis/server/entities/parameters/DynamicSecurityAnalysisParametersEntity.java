@@ -40,7 +40,7 @@ public class DynamicSecurityAnalysisParametersEntity {
     @Column(name = "contingenciesStartTime")
     private Double contingenciesStartTime;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
         name = "dynamic_security_analysis_parameters_contingency_list",
         joinColumns = @JoinColumn(name = "dynamic_security_analysis_parameters_id"),
@@ -69,7 +69,8 @@ public class DynamicSecurityAnalysisParametersEntity {
                 .id(id)
                 .provider(provider)
                 .scenarioDuration(scenarioDuration)
-                .contingencyListIds(contingencyListIds)
+                .contingenciesStartTime(contingenciesStartTime)
+                .contingencyListIds(new ArrayList<>(contingencyListIds))
                 .build();
     }
 

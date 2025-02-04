@@ -193,6 +193,7 @@ public class ParametersService {
         dynamicSecurityAnalysisParametersRepository.deleteById(parametersUuid);
     }
 
+    @Transactional
     public void updateProvider(UUID parametersUuid, String provider) {
         DynamicSecurityAnalysisParametersEntity entity = dynamicSecurityAnalysisParametersRepository.findById(parametersUuid)
                 .orElseThrow(() -> new DynamicSecurityAnalysisException(PARAMETERS_UUID_NOT_FOUND, MSG_PARAMETERS_UUID_NOT_FOUND + parametersUuid));
