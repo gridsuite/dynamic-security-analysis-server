@@ -17,7 +17,6 @@ import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotNull;
 
 import java.io.*;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -67,20 +66,6 @@ public final class Utils {
             }
             zipOs.finish();
             return os.toByteArray();
-        }
-    }
-
-    public static byte[] zip(String content) throws IOException {
-        try (InputStream is = new ByteArrayInputStream(content.getBytes())) {
-            return zip(is);
-        }
-    }
-
-    public static byte[] zip(Path filePath) {
-        try (InputStream is = Files.newInputStream(filePath)) {
-            return zip(is);
-        } catch (IOException e) {
-            throw new UncheckedIOException("Error occurred while zipping the file " + filePath.toAbsolutePath(), e);
         }
     }
 

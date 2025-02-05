@@ -9,19 +9,22 @@ package org.gridsuite.dynamicsecurityanalysis.server.controller;
 import com.powsybl.commons.datasource.ReadOnlyDataSource;
 import com.powsybl.commons.datasource.ResourceDataSource;
 import com.powsybl.commons.datasource.ResourceSet;
+import com.powsybl.commons.report.ReportNode;
 import com.powsybl.contingency.Contingency;
 import com.powsybl.iidm.network.Importers;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.PreloadingStrategy;
-import com.powsybl.security.SecurityAnalysisReport;
-import com.powsybl.security.SecurityAnalysisResult;
+import com.powsybl.security.*;
 import com.powsybl.security.dynamic.DynamicSecurityAnalysis;
+import com.powsybl.security.results.PostContingencyResult;
+import com.powsybl.security.results.PreContingencyResult;
 import com.powsybl.ws.commons.computation.service.NotificationService;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.DynamicSecurityAnalysisStatus;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.contingency.ContingencyInfos;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.parameters.DynamicSecurityAnalysisParametersInfos;
 import org.gridsuite.dynamicsecurityanalysis.server.entities.parameters.DynamicSecurityAnalysisParametersEntity;
+import org.gridsuite.dynamicsecurityanalysis.server.service.contexts.DynamicSecurityAnalysisRunContext;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -161,8 +164,6 @@ public class DynamicSecurityAnalysisControllerTest extends AbstractDynamicSecuri
 
         doReturn(CompletableFuture.completedFuture(new SecurityAnalysisReport(SecurityAnalysisResult.empty())))
                 .when(dynamicSecurityAnalysisWorkerService).getCompletableFuture(any(), any(), any());
-        doReturn(CompletableFuture.completedFuture(new SecurityAnalysisReport(SecurityAnalysisResult.empty())))
-                .when(dynamicSecurityAnalysisWorkerService).getCompletableFuture(any(), any(), isNull());
 
         //run the dynamic security analysis on a specific variant
         MvcResult result = mockMvc.perform(
@@ -246,6 +247,85 @@ public class DynamicSecurityAnalysisControllerTest extends AbstractDynamicSecuri
         mockMvc.perform(
                 delete("/v1/results"))
             .andExpect(status().isOk());
+    }
+
+    @Test
+    void testRunWithSynchronousExceptions() throws Exception {
+        //run the dynamic security analysis on a non-exiting provider
+        mockMvc.perform(
+                        post("/v1/networks/{networkUuid}/run?"
+                             + "&provider=notFoundProvider"
+                             + "&" + VARIANT_ID_HEADER + "=" + VARIANT_1_ID
+                             + "&dynamicSimulationResultUuid=" + DYNAMIC_SIMULATION_RESULT_UUID
+                             + "&parametersUuid=" + PARAMETERS_UUID,
+                                NETWORK_UUID.toString())
+                                .contentType(APPLICATION_JSON)
+                                .header(HEADER_USER_ID, "testUserId"))
+                .andExpect(status().isNotFound());
+
+        //run the dynamic security analysis on a non-exiting parameters
+        mockMvc.perform(
+                        post("/v1/networks/{networkUuid}/run?"
+                             + "&" + VARIANT_ID_HEADER + "=" + VARIANT_1_ID
+                             + "&dynamicSimulationResultUuid=" + DYNAMIC_SIMULATION_RESULT_UUID
+                             + "&parametersUuid=" + UUID.randomUUID(),
+                                NETWORK_UUID.toString())
+                                .contentType(APPLICATION_JSON)
+                                .header(HEADER_USER_ID, "testUserId"))
+                .andExpect(status().isNotFound());
+
+    }
+
+    @Test
+    void testRunWithReport() throws Exception {
+
+        doAnswer(invocation -> null).when(reportService).deleteReport(any());
+        doAnswer(invocation -> null).when(reportService).sendReport(any(), any());
+
+        doAnswer(invocation -> {
+            Object[] args = invocation.getArguments();
+            if (args[0] instanceof DynamicSecurityAnalysisRunContext runContext) {
+                if (runContext.getReportInfos().reportUuid() != null) {
+                    ReportNode dsaReportNode = runContext.getReportNode().newReportNode().withMessageTemplate("dsa", "").add();
+                    dsaReportNode.newReportNode().withMessageTemplate("saContingency", "Contingency '${contingencyId}'")
+                            .withUntypedValue("contingencyId", "contingencyId01")
+                            .add();
+                }
+            }
+            invocation.callRealMethod();
+            return null;
+        })
+            .when(dynamicSecurityAnalysisWorkerService).postRun(any(), any(), any());
+
+        doReturn(CompletableFuture.completedFuture(new SecurityAnalysisReport(
+                new SecurityAnalysisResult(
+                    new PreContingencyResult(),
+                    List.of(new PostContingencyResult(
+                            new Contingency("contingencyId01", List.of()),
+                            PostContingencyComputationStatus.CONVERGED,
+                            new LimitViolationsResult(List.of(
+                                new LimitViolation("subjectId01", LimitViolationType.HIGH_SHORT_CIRCUIT_CURRENT, 25.63, 4f, 33.54)
+                            )))),
+                    List.of()))))
+        .when(dynamicSecurityAnalysisWorkerService).getCompletableFuture(any(), any(), any());
+
+        MvcResult result = mockMvc.perform(
+                        post("/v1/networks/{networkUuid}/run?"
+                             + "&" + VARIANT_ID_HEADER + "=" + VARIANT_1_ID
+                             + "&dynamicSimulationResultUuid=" + DYNAMIC_SIMULATION_RESULT_UUID
+                             + "&parametersUuid=" + PARAMETERS_UUID
+                             + "&reportUuid=" + UUID.randomUUID()
+                             + "&reporterId=dsa",
+                                NETWORK_UUID.toString())
+                                .contentType(APPLICATION_JSON)
+                                .header(HEADER_USER_ID, "testUserId"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        UUID runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
+
+        Message<byte[]> messageSwitch = output.receive(1000, dsaResultDestination);
+        assertThat(messageSwitch.getHeaders()).containsEntry(HEADER_RESULT_UUID, runUuid.toString());
     }
 
     // --- BEGIN Test cancelling a running computation ---//

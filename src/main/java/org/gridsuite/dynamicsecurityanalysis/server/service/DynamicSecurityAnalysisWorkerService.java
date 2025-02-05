@@ -122,8 +122,11 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
         return COMPUTATION_TYPE;
     }
 
+    /**
+     * TODO : open to public for mocking test with enrich report, to revert to protected when powsybl-dynawo implements
+     */
     @Override
-    protected void postRun(DynamicSecurityAnalysisRunContext runContext, AtomicReference<ReportNode> rootReportNode, SecurityAnalysisReport securityAnalysisReport) {
+    public void postRun(DynamicSecurityAnalysisRunContext runContext, AtomicReference<ReportNode> rootReportNode, SecurityAnalysisReport securityAnalysisReport) {
         // TODO remove these reports when powsybl-dynawo implements
         // enrich infos for contingencies timeline report
         if (runContext.getReportInfos().reportUuid() != null) {

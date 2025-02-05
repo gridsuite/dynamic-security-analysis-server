@@ -8,6 +8,7 @@ package org.gridsuite.dynamicsecurityanalysis.server.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.network.store.client.NetworkStoreService;
+import com.powsybl.ws.commons.computation.service.ReportService;
 import lombok.SneakyThrows;
 import org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisApplication;
 import org.gridsuite.dynamicsecurityanalysis.server.controller.utils.TestUtils;
@@ -61,6 +62,9 @@ public abstract class AbstractDynamicSecurityAnalysisControllerTest extends Abst
 
     @Autowired
     ObjectMapper objectMapper;
+
+    @MockBean
+    protected ReportService reportService;
 
     @MockBean
     protected DynamicSimulationClient dynamicSimulationClient;
