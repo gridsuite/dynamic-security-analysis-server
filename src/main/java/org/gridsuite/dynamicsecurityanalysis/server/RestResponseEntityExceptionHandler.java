@@ -39,7 +39,9 @@ public class RestResponseEntityExceptionHandler {
                  DUMP_FILE_ERROR,
                  DYNAMIC_MODEL_ERROR,
                  CONTINGENCY_LIST_EMPTY,
-                 DYNAMIC_SIMULATION_PARAMETERS_ERROR
+                 CONTINGENCIES_GET_ERROR,
+                 DYNAMIC_SIMULATION_PARAMETERS_ERROR,
+                 DYNAMIC_SIMULATION_RESULT_GET_ERROR
                     -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(exception.getMessage());
         };
     }

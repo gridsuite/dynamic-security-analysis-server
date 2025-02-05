@@ -27,8 +27,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException.Type.CONTINGENCY_LIST_EMPTY;
-import static org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException.Type.CONTINGENCIES_NOT_FOUND;
+import static org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException.Type.*;
+import static org.gridsuite.dynamicsecurityanalysis.server.service.client.utils.ExceptionUtils.handleHttpError;
 import static org.gridsuite.dynamicsecurityanalysis.server.service.client.utils.UrlUtils.buildEndPointUrl;
 
 /**
@@ -71,8 +71,9 @@ public class ActionsClient extends AbstractRestClient {
         } catch (HttpStatusCodeException e) {
             if (HttpStatus.NOT_FOUND.equals(e.getStatusCode())) {
                 throw new DynamicSecurityAnalysisException(CONTINGENCIES_NOT_FOUND, "Contingencies not found");
+            } else {
+                throw handleHttpError(e, CONTINGENCIES_GET_ERROR, getObjectMapper());
             }
-            throw e;
         }
     }
 }

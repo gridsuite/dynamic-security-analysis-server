@@ -7,6 +7,7 @@
 package org.gridsuite.dynamicsecurityanalysis.server.utils.assertions;
 
 import org.assertj.core.util.CheckReturnValue;
+import org.gridsuite.dynamicsecurityanalysis.server.dto.contingency.ContingencyInfos;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.parameters.DynamicSecurityAnalysisParametersInfos;
 
 /**
@@ -16,6 +17,11 @@ import org.gridsuite.dynamicsecurityanalysis.server.dto.parameters.DynamicSecuri
 public class Assertions extends org.assertj.core.api.Assertions {
     @CheckReturnValue
     public static <T extends DynamicSecurityAnalysisParametersInfos> DTOAssert<DynamicSecurityAnalysisParametersInfos> assertThat(T actual) {
+        return new DTOAssert<>(actual);
+    }
+
+    @CheckReturnValue
+    public static <T extends ContingencyInfos> DTOAssert<ContingencyInfos> assertThat(T actual) {
         return new DTOAssert<>(actual);
     }
 

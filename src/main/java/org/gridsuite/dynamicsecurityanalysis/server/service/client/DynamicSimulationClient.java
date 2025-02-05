@@ -21,7 +21,9 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.util.Objects;
 import java.util.UUID;
 
+import static org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException.Type.DYNAMIC_SIMULATION_RESULT_GET_ERROR;
 import static org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException.Type.DYNAMIC_SIMULATION_RESULT_UUID_NOT_FOUND;
+import static org.gridsuite.dynamicsecurityanalysis.server.service.client.utils.ExceptionUtils.handleHttpError;
 import static org.gridsuite.dynamicsecurityanalysis.server.service.client.utils.UrlUtils.buildEndPointUrl;
 
 /**
@@ -34,6 +36,9 @@ public class DynamicSimulationClient extends AbstractRestClient {
     public static final String DYNAMIC_SIMULATION_REST_API_CALLED_SUCCESSFULLY_MESSAGE = "Dynamic simulation REST API called successfully {}";
 
     public static final String DYNAMIC_SIMULATION_END_POINT_RESULT = "results";
+    public static final String OUTPUT_STATE = "output-state";
+    public static final String DYNAMIC_MODEL = "dynamic-model";
+    public static final String PARAMETERS = "parameters";
 
     @Autowired
     public DynamicSimulationClient(@Value("${gridsuite.services.dynamic-simulation-server.base-uri:http://dynamic-simulation-server/}") String baseUri, RestTemplate restTemplate, ObjectMapper objectMapper) {
@@ -58,20 +63,21 @@ public class DynamicSimulationClient extends AbstractRestClient {
         } catch (HttpStatusCodeException e) {
             if (HttpStatus.NOT_FOUND.equals(e.getStatusCode())) {
                 throw new DynamicSecurityAnalysisException(DYNAMIC_SIMULATION_RESULT_UUID_NOT_FOUND, "Dynamic simulation result not found");
+            } else {
+                throw handleHttpError(e, DYNAMIC_SIMULATION_RESULT_GET_ERROR, getObjectMapper());
             }
-            throw e;
         }
     }
 
     public byte[] getOutputState(UUID dynamicSimulationResultUuid) {
-        return getDynamicSimulationResultElement(dynamicSimulationResultUuid, "output-state");
+        return getDynamicSimulationResultElement(dynamicSimulationResultUuid, OUTPUT_STATE);
     }
 
     public byte[] getDynamicModel(UUID dynamicSimulationResultUuid) {
-        return getDynamicSimulationResultElement(dynamicSimulationResultUuid, "dynamic-model");
+        return getDynamicSimulationResultElement(dynamicSimulationResultUuid, DYNAMIC_MODEL);
     }
 
     public byte[] getDynamicSimulationParameters(UUID dynamicSimulationResultUuid) {
-        return getDynamicSimulationResultElement(dynamicSimulationResultUuid, "parameters");
+        return getDynamicSimulationResultElement(dynamicSimulationResultUuid, PARAMETERS);
     }
 }
