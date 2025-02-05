@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024, RTE (http://www.rte-france.com)
+ * Copyright (c) 2025, RTE (http://www.rte-france.com)
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -24,7 +24,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @Entity
-@Table(name = "dynamicSecurityAnalysisParameters")
+@Table(name = "dynamic_security_analysis_parameters")
 public class DynamicSecurityAnalysisParametersEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -34,10 +34,10 @@ public class DynamicSecurityAnalysisParametersEntity {
     @Column(name = "provider")
     private String provider;
 
-    @Column(name = "scenarioDuration")
+    @Column(name = "scenario_duration")
     private Double scenarioDuration;
 
-    @Column(name = "contingenciesStartTime")
+    @Column(name = "contingencies_start_time")
     private Double contingenciesStartTime;
 
     @ElementCollection(fetch = FetchType.EAGER)

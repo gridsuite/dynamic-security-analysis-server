@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2022, RTE (http://www.rte-france.com)
+ * Copyright (c) 2025, RTE (http://www.rte-france.com)
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -21,7 +21,6 @@ import org.gridsuite.dynamicsecurityanalysis.server.dto.parameters.DynamicSecuri
 import org.gridsuite.dynamicsecurityanalysis.server.entities.parameters.DynamicSecurityAnalysisParametersEntity;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.stream.binder.test.InputDestination;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
 import org.springframework.messaging.Message;
 import org.springframework.test.web.servlet.MvcResult;
@@ -57,7 +56,6 @@ public class DynamicSecurityAnalysisControllerIEEE14Test extends AbstractDynamic
     // directories
     public static final String DATA_IEEE14_BASE_DIR = RESOURCE_PATH_DELIMITER + "data" + RESOURCE_PATH_DELIMITER + "ieee14";
     public static final String INPUT = "input";
-    public static final String OUTPUT = "output";
     public static final String OUTPUT_STATE_DUMP_FILE = "outputState.dmp";
     public static final String DYNAMIC_MODEL_DUMP_FILE = "dynamicModel.dmp";
     public static final String DYNAMIC_SIMULATION_PARAMETERS_DUMP_FILE = "dynamicSimulationParameters.dmp";
@@ -73,9 +71,6 @@ public class DynamicSecurityAnalysisControllerIEEE14Test extends AbstractDynamic
 
     @Autowired
     private OutputDestination output;
-
-    @Autowired
-    private InputDestination input;
 
     @Override
     public OutputDestination getOutputDestination() {
@@ -152,7 +147,6 @@ public class DynamicSecurityAnalysisControllerIEEE14Test extends AbstractDynamic
 
     @Test
     void test01IEEE14() throws Exception {
-        String testBaseDir = TEST_CASE_01;
 
         //run the dynamic security analysis (on a specific variant with variantId=" + VARIANT_1_ID + ")
         MvcResult result = mockMvc.perform(
@@ -168,8 +162,7 @@ public class DynamicSecurityAnalysisControllerIEEE14Test extends AbstractDynamic
 
         UUID runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
 
-        //TODO maybe find a more reliable way to test this : failed with 1000 * 30 timeout
-        Message<byte[]> messageSwitch = output.receive(1000 * 40, dsaResultDestination);
+        Message<byte[]> messageSwitch = output.receive(1000, dsaResultDestination);
         assertThat(messageSwitch.getHeaders()).containsEntry(HEADER_RESULT_UUID, runUuid.toString());
 
         // --- CHECK result --- //

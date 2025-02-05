@@ -26,7 +26,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.SpyBean;
-import org.springframework.cloud.stream.binder.test.InputDestination;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
 import org.springframework.messaging.Message;
 import org.springframework.test.web.servlet.MvcResult;
@@ -67,13 +66,11 @@ public class DynamicSecurityAnalysisControllerTest extends AbstractDynamicSecuri
     // directories
     public static final String DATA_IEEE14_BASE_DIR = RESOURCE_PATH_DELIMITER + "data" + RESOURCE_PATH_DELIMITER + "ieee14";
     public static final String INPUT = "input";
-    public static final String OUTPUT = "output";
     public static final String OUTPUT_STATE_DUMP_FILE = "outputState.dmp";
     public static final String DYNAMIC_MODEL_DUMP_FILE = "dynamicModel.dmp";
     public static final String DYNAMIC_SIMULATION_PARAMETERS_DUMP_FILE = "dynamicSimulationParameters.dmp";
 
     private static final UUID NETWORK_UUID = UUID.randomUUID();
-    private static final UUID NETWORK_UUID_NOT_FOUND = UUID.randomUUID();
     private static final String VARIANT_1_ID = "variant_1";
     private static final String NETWORK_FILE = "IEEE14.iidm";
 
@@ -83,9 +80,6 @@ public class DynamicSecurityAnalysisControllerTest extends AbstractDynamicSecuri
 
     @Autowired
     private OutputDestination output;
-
-    @Autowired
-    private InputDestination input;
 
     @SpyBean
     private NotificationService notificationService;
@@ -365,7 +359,8 @@ public class DynamicSecurityAnalysisControllerTest extends AbstractDynamicSecuri
         assertThat(message.getHeaders())
                 .containsEntry(HEADER_RESULT_UUID, runUuid.toString())
                 .containsEntry(HEADER_MESSAGE, getCancelFailedMessage(COMPUTATION_TYPE));
-        // cancel failed so result still exist
+        // cancel failed so result still exist but status is still RUNNING
+        // TODO need to revisit the implementation in commons-ui, status must be NOT_DONE
         assertResultStatus(runUuid, DynamicSecurityAnalysisStatus.RUNNING);
     }
 
