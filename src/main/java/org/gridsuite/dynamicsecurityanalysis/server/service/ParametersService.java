@@ -67,11 +67,11 @@ public class ParametersService {
                 .networkUuid(networkUuid)
                 .variantId(variantId)
                 .receiver(receiver)
-                .dynamicSimulationResultUuid(dynamicSimulationResultUuid)
                 .reportInfos(reportInfos)
                 .userId(userId)
                 .parameters(dynamicSecurityAnalysisParametersInfos)
                 .build();
+        runContext.setDynamicSimulationResultUuid(dynamicSimulationResultUuid);
 
         // set provider for run context
         String providerToUse = provider;
