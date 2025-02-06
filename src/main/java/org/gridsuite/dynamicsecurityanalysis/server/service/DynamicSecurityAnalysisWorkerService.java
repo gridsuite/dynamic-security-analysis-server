@@ -29,6 +29,7 @@ import com.powsybl.security.dynamic.DynamicSecurityAnalysisParameters;
 import com.powsybl.security.dynamic.DynamicSecurityAnalysisRunParameters;
 import com.powsybl.security.results.PostContingencyResult;
 import com.powsybl.ws.commons.computation.service.*;
+import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.DynamicSecurityAnalysisStatus;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.contingency.ContingencyInfos;
@@ -56,6 +57,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
+import static org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException.Type.CONTINGENCIES_NOT_FOUND;
 import static org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException.Type.DUMP_FILE_ERROR;
 import static org.gridsuite.dynamicsecurityanalysis.server.service.DynamicSecurityAnalysisService.COMPUTATION_TYPE;
 import static org.gridsuite.dynamicsecurityanalysis.server.utils.Utils.*;
@@ -146,6 +148,9 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
 
         // get contingencies from actions server
         List<ContingencyInfos> contingencyList = actionsClient.getContingencyList(runContext.getParameters().getContingencyListIds(), runContext.getNetworkUuid(), runContext.getVariantId());
+        if (CollectionUtils.isEmpty(contingencyList)) {
+            throw new DynamicSecurityAnalysisException(CONTINGENCIES_NOT_FOUND, "No contingencies");
+        }
 
         // get dump file from dynamic simulation server
         byte[] dynamicSimulationZippedOutputState = dynamicSimulationClient.getOutputState(runContext.getDynamicSimulationResultUuid());
