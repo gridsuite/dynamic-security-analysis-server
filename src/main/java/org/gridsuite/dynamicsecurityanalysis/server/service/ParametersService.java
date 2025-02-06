@@ -144,7 +144,7 @@ public class ParametersService {
     }
 
     public UUID createParameters(DynamicSecurityAnalysisParametersInfos parametersInfos) {
-        return dynamicSecurityAnalysisParametersRepository.save(parametersInfos.toEntity()).getId();
+        return dynamicSecurityAnalysisParametersRepository.save(new DynamicSecurityAnalysisParametersEntity(parametersInfos)).getId();
     }
 
     public UUID createDefaultParameters() {

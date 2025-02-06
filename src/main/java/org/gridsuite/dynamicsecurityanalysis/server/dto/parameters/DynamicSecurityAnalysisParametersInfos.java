@@ -10,7 +10,6 @@ package org.gridsuite.dynamicsecurityanalysis.server.dto.parameters;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
-import org.gridsuite.dynamicsecurityanalysis.server.entities.parameters.DynamicSecurityAnalysisParametersEntity;
 
 import java.util.List;
 import java.util.UUID;
@@ -38,7 +37,4 @@ public class DynamicSecurityAnalysisParametersInfos {
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<UUID> contingencyListIds;
 
-    public DynamicSecurityAnalysisParametersEntity toEntity() {
-        return new DynamicSecurityAnalysisParametersEntity(this);
-    }
 }

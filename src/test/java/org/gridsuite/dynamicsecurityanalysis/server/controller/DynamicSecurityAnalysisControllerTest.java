@@ -284,13 +284,11 @@ public class DynamicSecurityAnalysisControllerTest extends AbstractDynamicSecuri
 
         doAnswer(invocation -> {
             Object[] args = invocation.getArguments();
-            if (args[0] instanceof DynamicSecurityAnalysisRunContext runContext) {
-                if (runContext.getReportInfos().reportUuid() != null) {
-                    ReportNode dsaReportNode = runContext.getReportNode().newReportNode().withMessageTemplate("dsa", "").add();
-                    dsaReportNode.newReportNode().withMessageTemplate("saContingency", "Contingency '${contingencyId}'")
-                            .withUntypedValue("contingencyId", "contingencyId01")
-                            .add();
-                }
+            if (args[0] instanceof DynamicSecurityAnalysisRunContext runContext && runContext.getReportInfos().reportUuid() != null) {
+                ReportNode dsaReportNode = runContext.getReportNode().newReportNode().withMessageTemplate("dsa", "").add();
+                dsaReportNode.newReportNode().withMessageTemplate("saContingency", "Contingency '${contingencyId}'")
+                        .withUntypedValue("contingencyId", "contingencyId01")
+                        .add();
             }
             invocation.callRealMethod();
             return null;
@@ -440,7 +438,7 @@ public class DynamicSecurityAnalysisControllerTest extends AbstractDynamicSecuri
                 .containsEntry(HEADER_RESULT_UUID, runUuid.toString())
                 .containsEntry(HEADER_MESSAGE, getCancelFailedMessage(COMPUTATION_TYPE));
         // cancel failed so result still exist but status is still RUNNING
-        // TODO need to revisit the implementation in commons-ui, status must be NOT_DONE
+        // TODO need to revisit the implementation in ws-commons, status must be NOT_DONE
         assertResultStatus(runUuid, DynamicSecurityAnalysisStatus.RUNNING);
     }
 

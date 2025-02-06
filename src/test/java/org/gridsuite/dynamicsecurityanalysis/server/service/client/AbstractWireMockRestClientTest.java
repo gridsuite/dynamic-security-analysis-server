@@ -39,7 +39,7 @@ public abstract class AbstractWireMockRestClientTest {
         wireMockServer = server;
 
         wireMockServer.start();
-        getLogger().info("Mock server started at port = " + wireMockServer.port());
+        getLogger().info("Mock server started at port = {}", wireMockServer.port());
 
         // get base URL
         return wireMockServer.baseUrl();
@@ -50,7 +50,7 @@ public abstract class AbstractWireMockRestClientTest {
         try {
             wireMockServer.shutdown();
         } catch (Exception e) {
-            getLogger().info("Can not shutdown the mock server " + this.getClass().getSimpleName());
+            getLogger().info("Can not shutdown the mock server {}", this.getClass().getSimpleName());
         }
     }
 }

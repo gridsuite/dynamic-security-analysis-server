@@ -123,11 +123,7 @@ public abstract class AbstractDynamicSecurityAnalysisControllerTest extends Abst
         OutputDestination output = getOutputDestination();
         List<String> destinations = List.of(dsaResultDestination, dsaStoppedDestination, dsaCancelFailedDestination);
 
-        try {
-            TestUtils.assertQueuesEmptyThenClear(destinations, output);
-        } catch (InterruptedException e) {
-            throw new RuntimeException("Error while checking message queues empty", e);
-        }
+        TestUtils.assertQueuesEmptyThenClear(destinations, output);
     }
 
     protected abstract OutputDestination getOutputDestination();
