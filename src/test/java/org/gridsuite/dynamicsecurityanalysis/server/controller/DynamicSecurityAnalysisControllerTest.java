@@ -139,7 +139,7 @@ public class DynamicSecurityAnalysisControllerTest extends AbstractDynamicSecuri
 
     @Override
     protected void initActionsClientMock() {
-        when(actionsClient.getContingencyList(anyList(), eq(NETWORK_UUID), eq(VARIANT_1_ID)))
+        when(actionsClient.getContingencyList(anyList(), eq(NETWORK_UUID), any()))
                 .thenReturn(List.of(new ContingencyInfos(Contingency.load("_LOAD__11_EC"))));
     }
 
