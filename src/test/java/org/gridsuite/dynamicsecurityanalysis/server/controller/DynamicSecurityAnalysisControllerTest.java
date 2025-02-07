@@ -69,7 +69,7 @@ public class DynamicSecurityAnalysisControllerTest extends AbstractDynamicSecuri
     // directories
     public static final String DATA_IEEE14_BASE_DIR = RESOURCE_PATH_DELIMITER + "data" + RESOURCE_PATH_DELIMITER + "ieee14";
     public static final String INPUT = "input";
-    public static final String OUTPUT_STATE_DUMP_FILE = "outputState.dmp";
+    public static final String OUTPUT_STATE_DUMP_GZIP_FILE = "outputState.dmp.gz";
     public static final String DYNAMIC_MODEL_DUMP_FILE = "dynamicModel.dmp";
     public static final String DYNAMIC_SIMULATION_PARAMETERS_DUMP_FILE = "dynamicSimulationParameters.dmp";
 
@@ -108,8 +108,8 @@ public class DynamicSecurityAnalysisControllerTest extends AbstractDynamicSecuri
                               RESOURCE_PATH_DELIMITER + TEST_CASE_01 +
                               RESOURCE_PATH_DELIMITER + INPUT;
 
-            // load outputState.dmp
-            String outputStateFilePath = inputDir + RESOURCE_PATH_DELIMITER + OUTPUT_STATE_DUMP_FILE;
+            // load outputState.dmp.gz
+            String outputStateFilePath = inputDir + RESOURCE_PATH_DELIMITER + OUTPUT_STATE_DUMP_GZIP_FILE;
             InputStream outputStateIS = getClass().getResourceAsStream(outputStateFilePath);
             assert outputStateIS != null;
             byte[] zippedOutputState = zip(outputStateIS);
