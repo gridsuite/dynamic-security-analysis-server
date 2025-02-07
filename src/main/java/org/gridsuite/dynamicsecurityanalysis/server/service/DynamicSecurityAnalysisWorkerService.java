@@ -221,6 +221,19 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
         );
     }
 
+    @Override
+    protected void handleNonCancellationException(AbstractResultContext<DynamicSecurityAnalysisRunContext> resultContext, Exception exception, AtomicReference<ReportNode> rootReporter) {
+        super.handleNonCancellationException(resultContext, exception, rootReporter);
+        // try to get report nodes at powsybl level
+        List<ReportNode> computationReportNodes = Optional.ofNullable(resultContext.getRunContext().getReportNode()).map(ReportNode::getChildren).orElse(null);
+        if (CollectionUtils.isNotEmpty(computationReportNodes)) { // means computing has started at powsybl level
+            //  re-inject result table since it has been removed by handling exception in the super
+            resultService.insertStatus(List.of(resultContext.getResultUuid()), DynamicSecurityAnalysisStatus.FAILED);
+            // continue sending report for tracing reason
+            super.postRun(resultContext.getRunContext(), rootReporter, null);
+        }
+    }
+
     @Bean
     @Override
     public Consumer<Message<String>> consumeRun() {
