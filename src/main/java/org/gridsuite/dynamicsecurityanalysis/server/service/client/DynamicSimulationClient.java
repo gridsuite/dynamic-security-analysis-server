@@ -8,6 +8,7 @@
 package org.gridsuite.dynamicsecurityanalysis.server.service.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.NonNull;
 import org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,7 +19,6 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.Objects;
 import java.util.UUID;
 
 import static org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException.Type.DYNAMIC_SIMULATION_RESULT_GET_ERROR;
@@ -45,8 +45,7 @@ public class DynamicSimulationClient extends AbstractRestClient {
         super(baseUri, restTemplate, objectMapper);
     }
 
-    private byte[] getDynamicSimulationResultElement(UUID dynamicSimulationResultUuid, String resultElementEndpoint) {
-        Objects.requireNonNull(dynamicSimulationResultUuid);
+    private byte[] getDynamicSimulationResultElement(@NonNull UUID dynamicSimulationResultUuid, @NonNull String resultElementEndpoint) {
         String endPointUrl = buildEndPointUrl(getBaseUri(), API_VERSION, DYNAMIC_SIMULATION_END_POINT_RESULT);
 
         UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(endPointUrl + "/{resultUuid}/{resultElementEndpoint}")

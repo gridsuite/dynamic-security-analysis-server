@@ -7,6 +7,7 @@
 package org.gridsuite.dynamicsecurityanalysis.server.service.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.NonNull;
 import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.contingency.ContingencyInfos;
@@ -23,7 +24,6 @@ import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -48,8 +48,7 @@ public class ActionsClient extends AbstractRestClient {
         super(baseUri, restTemplate, objectMapper);
     }
 
-    public List<ContingencyInfos> getContingencyList(List<UUID> ids, UUID networkUuid, String variantId) {
-        Objects.requireNonNull(networkUuid);
+    public List<ContingencyInfos> getContingencyList(List<UUID> ids, @NonNull UUID networkUuid, String variantId) {
         if (CollectionUtils.isEmpty(ids)) {
             throw new DynamicSecurityAnalysisException(CONTINGENCY_LIST_EMPTY, "Contingency list parameter must not be null or empty");
         }
