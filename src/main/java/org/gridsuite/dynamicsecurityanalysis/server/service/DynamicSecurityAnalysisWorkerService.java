@@ -288,7 +288,7 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
             ReportNode contingencyReportNode = getReportNode(reportNode, "saContingency", String.format("(.*)%s(.*)", contingencyId));
             if (contingencyReportNode != null) {
                 contingencyReportNode.newReportNode()
-                        .withSeverity(postContingencyResult.getStatus() == PostContingencyComputationStatus.CONVERGED ? TypedValue.TRACE_SEVERITY : TypedValue.WARN_SEVERITY)
+                        .withSeverity(postContingencyResult.getStatus() == PostContingencyComputationStatus.CONVERGED ? TypedValue.INFO_SEVERITY : TypedValue.ERROR_SEVERITY)
                         .withMessageTemplate("saContingencyStatus", INDENT_4 + "Status : ${contingencyStatus}")
                         .withUntypedValue("contingencyStatus", postContingencyResult.getStatus().name()).add();
                 if (isNotEmpty(limitViolations)) {
