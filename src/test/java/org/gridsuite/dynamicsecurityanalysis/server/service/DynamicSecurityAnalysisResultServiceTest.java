@@ -7,7 +7,6 @@
 
 package org.gridsuite.dynamicsecurityanalysis.server.service;
 
-import org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.DynamicSecurityAnalysisStatus;
 import org.gridsuite.dynamicsecurityanalysis.server.entities.DynamicSecurityAnalysisResultEntity;
 import org.gridsuite.dynamicsecurityanalysis.server.repositories.DynamicSecurityAnalysisResultRepository;
@@ -23,8 +22,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.catchThrowableOfType;
-import static org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException.Type.RESULT_UUID_NOT_FOUND;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -86,8 +83,8 @@ class DynamicSecurityAnalysisResultServiceTest {
         assertThat(foundResultEntity).isNotPresent();
 
         // --- get status of a deleted entity --- //
-        DynamicSecurityAnalysisException exception = catchThrowableOfType(() -> dynamicSecurityAnalysisResultService.findStatus(resultUuid), DynamicSecurityAnalysisException.class);
-        assertThat(exception.getType()).isEqualTo(RESULT_UUID_NOT_FOUND);
+        status = dynamicSecurityAnalysisResultService.findStatus(resultUuid);
+        assertThat(status).isNull();
 
         // --- delete all --- //
         LOGGER.info("Test delete all results");
