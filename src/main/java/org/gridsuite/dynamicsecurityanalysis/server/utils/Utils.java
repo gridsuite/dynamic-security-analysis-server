@@ -7,8 +7,6 @@
 
 package org.gridsuite.dynamicsecurityanalysis.server.utils;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.report.ReportNode;
 import com.powsybl.dynawo.suppliers.Property;
 import com.powsybl.dynawo.suppliers.dynamicmodels.DynamicModelConfig;
@@ -16,13 +14,9 @@ import com.powsybl.iidm.network.TwoSides;
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotNull;
 
-import java.io.*;
-import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -54,51 +48,6 @@ public final class Utils {
                     dynamicModelConfig.properties().set(currIdx, replaceProperty);
                 }
             }));
-    }
-
-    public static byte[] zip(InputStream is) throws IOException {
-        try (ByteArrayOutputStream os = new ByteArrayOutputStream();
-             GZIPOutputStream zipOs = new GZIPOutputStream(os)) {
-            byte[] buffer = new byte[1024];
-            int length;
-            while ((length = is.read(buffer)) > 0) {
-                zipOs.write(buffer, 0, length);
-            }
-            zipOs.finish();
-            return os.toByteArray();
-        }
-    }
-
-    private static void unzipToStream(byte[] zippedBytes, OutputStream outputStream) throws IOException {
-        try (ByteArrayInputStream is = new ByteArrayInputStream(zippedBytes);
-             GZIPInputStream zipIs = new GZIPInputStream(is);
-             BufferedOutputStream bufferedOut = new BufferedOutputStream(outputStream)) {
-            byte[] buffer = new byte[1024];
-            int length;
-            while ((length = zipIs.read(buffer)) > 0) {
-                bufferedOut.write(buffer, 0, length);
-            }
-        }
-    }
-
-    public static void unzip(byte[] zippedBytes, Path filePath) throws IOException {
-        try (FileOutputStream fos = new FileOutputStream(new File(filePath.toUri()))) {
-            unzipToStream(zippedBytes, fos);
-        }
-    }
-
-    public static <T> T unzip(byte[] zippedBytes, ObjectMapper objectMapper, TypeReference<T> valueTypeRef) throws IOException {
-        try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
-            unzipToStream(zippedBytes, bos);
-            return objectMapper.readValue(bos.toByteArray(), valueTypeRef);
-        }
-    }
-
-    public static <T> T unzip(byte[] zippedBytes, ObjectMapper objectMapper, Class<T> valueType) throws IOException {
-        try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
-            unzipToStream(zippedBytes, bos);
-            return objectMapper.readValue(bos.toByteArray(), valueType);
-        }
     }
 
     /**

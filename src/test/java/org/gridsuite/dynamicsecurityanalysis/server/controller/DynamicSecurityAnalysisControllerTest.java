@@ -20,6 +20,7 @@ import com.powsybl.security.dynamic.DynamicSecurityAnalysis;
 import com.powsybl.security.results.PostContingencyResult;
 import com.powsybl.security.results.PreContingencyResult;
 import com.powsybl.ws.commons.computation.service.NotificationService;
+import com.powsybl.ws.commons.utils.GZipUtils;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.DynamicSecurityAnalysisStatus;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.contingency.ContingencyInfos;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.parameters.DynamicSecurityAnalysisParametersInfos;
@@ -47,10 +48,10 @@ import java.util.function.Supplier;
 import static com.powsybl.network.store.model.NetworkStoreApi.VERSION;
 import static com.powsybl.ws.commons.computation.service.AbstractResultContext.VARIANT_ID_HEADER;
 import static com.powsybl.ws.commons.computation.service.NotificationService.*;
+import static com.powsybl.ws.commons.utils.GZipUtils.zip;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.dynamicsecurityanalysis.server.service.DynamicSecurityAnalysisService.COMPUTATION_TYPE;
 import static org.gridsuite.dynamicsecurityanalysis.server.utils.Utils.RESOURCE_PATH_DELIMITER;
-import static org.gridsuite.dynamicsecurityanalysis.server.utils.Utils.zip;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
@@ -112,7 +113,7 @@ public class DynamicSecurityAnalysisControllerTest extends AbstractDynamicSecuri
             String outputStateFilePath = inputDir + RESOURCE_PATH_DELIMITER + OUTPUT_STATE_DUMP_GZIP_FILE;
             InputStream outputStateIS = getClass().getResourceAsStream(outputStateFilePath);
             assert outputStateIS != null;
-            byte[] zippedOutputState = zip(outputStateIS);
+            byte[] zippedOutputState = GZipUtils.zip(outputStateIS);
 
             given(dynamicSimulationClient.getOutputState(DYNAMIC_SIMULATION_RESULT_UUID)).willReturn(zippedOutputState);
 

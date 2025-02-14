@@ -16,6 +16,7 @@ import com.powsybl.dynawo.DynawoSimulationParameters;
 import com.powsybl.dynawo.suppliers.dynamicmodels.DynamicModelConfig;
 import com.powsybl.security.dynamic.DynamicSecurityAnalysisParameters;
 import com.powsybl.ws.commons.computation.dto.ReportInfos;
+import com.powsybl.ws.commons.utils.GZipUtils;
 import jakarta.transaction.Transactional;
 import org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.parameters.DynamicSecurityAnalysisParametersInfos;
@@ -104,7 +105,7 @@ public class ParametersService {
         Path dumpFile = dumpDir.resolve("outputState.dmp");
         try {
             // UNZIP output state
-            Utils.unzip(zippedOutputState, dumpFile);
+            GZipUtils.unzip(zippedOutputState, dumpFile);
         } catch (IOException e) {
             throw new DynamicSecurityAnalysisException(DUMP_FILE_ERROR, String.format("Error occurred while unzip the output state into a dump file in the directory %s",
                     dumpDir.toAbsolutePath()));
@@ -115,7 +116,7 @@ public class ParametersService {
     public List<DynamicModelConfig> unZipDynamicModel(byte[] dynamicSimulationZippedDynamicModel, ObjectMapper objectMapper) {
         try {
             // unzip dynamic model
-            List<DynamicModelConfig> dynamicModel = Utils.unzip(dynamicSimulationZippedDynamicModel, objectMapper, new TypeReference<>() { });
+            List<DynamicModelConfig> dynamicModel = GZipUtils.unzip(dynamicSimulationZippedDynamicModel, objectMapper, new TypeReference<>() { });
             Utils.postDeserializerDynamicModel(dynamicModel);
             return dynamicModel;
         } catch (IOException e) {
@@ -126,7 +127,7 @@ public class ParametersService {
     public DynamicSimulationParameters unZipDynamicSimulationParameters(byte[] dynamicSimulationZippedParameters, ObjectMapper objectMapper) {
         try {
             // unzip dynamic model
-            return Utils.unzip(dynamicSimulationZippedParameters, objectMapper, DynamicSimulationParameters.class);
+            return GZipUtils.unzip(dynamicSimulationZippedParameters, objectMapper, DynamicSimulationParameters.class);
         } catch (IOException e) {
             throw new DynamicSecurityAnalysisException(DYNAMIC_SIMULATION_PARAMETERS_ERROR, "Error occurred while unzip the dynamic simulation parameters");
         }
