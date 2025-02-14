@@ -15,6 +15,7 @@ import com.powsybl.iidm.network.Importers;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.PreloadingStrategy;
+import com.powsybl.ws.commons.utils.GZipUtils;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.DynamicSecurityAnalysisStatus;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.contingency.ContingencyInfos;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.parameters.DynamicSecurityAnalysisParametersInfos;
@@ -37,7 +38,6 @@ import static com.powsybl.ws.commons.computation.service.NotificationService.HEA
 import static com.powsybl.ws.commons.computation.service.NotificationService.HEADER_USER_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.dynamicsecurityanalysis.server.utils.Utils.RESOURCE_PATH_DELIMITER;
-import static org.gridsuite.dynamicsecurityanalysis.server.utils.Utils.zip;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -106,7 +106,7 @@ public class DynamicSecurityAnalysisControllerIEEE14Test extends AbstractDynamic
             String dynamicModelFilePath = inputDir + RESOURCE_PATH_DELIMITER + DYNAMIC_MODEL_DUMP_FILE;
             InputStream dynamicModelIS = getClass().getResourceAsStream(dynamicModelFilePath);
             assert dynamicModelIS != null;
-            byte[] zippedDynamicModel = zip(dynamicModelIS);
+            byte[] zippedDynamicModel = GZipUtils.zip(dynamicModelIS);
 
             given(dynamicSimulationClient.getDynamicModel(DYNAMIC_SIMULATION_RESULT_UUID)).willReturn(zippedDynamicModel);
 
@@ -114,7 +114,7 @@ public class DynamicSecurityAnalysisControllerIEEE14Test extends AbstractDynamic
             String dynamicSimulationParametersFilePath = inputDir + RESOURCE_PATH_DELIMITER + DYNAMIC_SIMULATION_PARAMETERS_DUMP_FILE;
             InputStream dynamicSimulationParametersIS = getClass().getResourceAsStream(dynamicSimulationParametersFilePath);
             assert dynamicSimulationParametersIS != null;
-            byte[] zippedDynamicSimulationParameters = zip(dynamicSimulationParametersIS);
+            byte[] zippedDynamicSimulationParameters = GZipUtils.zip(dynamicSimulationParametersIS);
 
             given(dynamicSimulationClient.getDynamicSimulationParameters(DYNAMIC_SIMULATION_RESULT_UUID)).willReturn(zippedDynamicSimulationParameters);
 
