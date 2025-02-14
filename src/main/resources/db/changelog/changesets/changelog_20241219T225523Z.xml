@@ -1,0 +1,26 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="phamquy (generated)" id="1734648930484-1">
+        <createTable tableName="dynamic_security_analysis_parameters">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="dynamic_security_analysis_parametersPK"/>
+            </column>
+            <column name="contingencies_start_time" type="FLOAT(53)"/>
+            <column name="provider" type="VARCHAR(255)"/>
+            <column name="scenario_duration" type="FLOAT(53)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1734648930484-2">
+        <createTable tableName="dynamic_security_analysis_parameters_contingency_list">
+            <column name="dynamic_security_analysis_parameters_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="contingency_list_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1734648930484-3">
+        <addForeignKeyConstraint baseColumnNames="dynamic_security_analysis_parameters_id" baseTableName="dynamic_security_analysis_parameters_contingency_list" constraintName="dynamic_security_analysis_parameters_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="dynamic_security_analysis_parameters" validate="true"/>
+    </changeSet>
+</databaseChangeLog>

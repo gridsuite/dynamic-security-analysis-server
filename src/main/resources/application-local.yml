@@ -4,7 +4,6 @@ server:
 spring:
   rabbitmq:
     addresses: localhost
-    port: 5672
 
 powsybl-ws:
   database:
@@ -17,7 +16,9 @@ powsybl:
 
 gridsuite:
   services:
-    dynamic-simulation-server:
-      base-uri: http://localhost:5032
+    actions-server:
+      base-uri: http://localhost:5022
     report-server:
       base-uri: http://localhost:5028
+    dynamic-simulation-server:
+      base-uri: http://localhost:5032

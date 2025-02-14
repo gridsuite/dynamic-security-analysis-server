@@ -31,7 +31,7 @@ public class DynamicSecurityAnalysisResultEntity {
     }
 
     @Id
-    @Column(name = "resultUuid")
+    @Column(name = "result_uuid")
     private UUID id;
 
     @Column(name = "status")

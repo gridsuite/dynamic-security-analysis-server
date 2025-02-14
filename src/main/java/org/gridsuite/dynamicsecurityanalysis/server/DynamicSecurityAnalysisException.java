@@ -15,7 +15,18 @@ import lombok.Getter;
 public class DynamicSecurityAnalysisException extends RuntimeException {
 
     public enum Type {
+        URI_SYNTAX,
+        PROVIDER_NOT_FOUND,
         RESULT_UUID_NOT_FOUND,
+        DYNAMIC_SIMULATION_RESULT_UUID_NOT_FOUND,
+        DYNAMIC_SIMULATION_RESULT_GET_ERROR,
+        CONTINGENCIES_NOT_FOUND,
+        CONTINGENCIES_GET_ERROR,
+        CONTINGENCY_LIST_EMPTY,
+        PARAMETERS_UUID_NOT_FOUND,
+        DUMP_FILE_ERROR,
+        DYNAMIC_MODEL_ERROR,
+        DYNAMIC_SIMULATION_PARAMETERS_ERROR,
     }
 
     private final Type type;
