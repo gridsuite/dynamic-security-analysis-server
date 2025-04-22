@@ -45,6 +45,8 @@
         <gridsuite-dependencies.version>38.1.0-SNAPSHOT</gridsuite-dependencies.version>
         <jib.from.image>powsybl/java-dynawo:3.0.0</jib.from.image>
         <liquibase-hibernate-package>org.gridsuite.dynamicsecurityanalysis.server</liquibase-hibernate-package>
+        <sonar.organization>gridsuite</sonar.organization>
+        <sonar.projectKey>org.gridsuite:dynamic-security-analysis-server</sonar.projectKey>
     </properties>
 
     <build>
