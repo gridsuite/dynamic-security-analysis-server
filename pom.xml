@@ -47,7 +47,9 @@
         <liquibase-hibernate-package>org.gridsuite.dynamicsecurityanalysis.server</liquibase-hibernate-package>
         <sonar.organization>gridsuite</sonar.organization>
         <sonar.projectKey>org.gridsuite:dynamic-security-analysis-server</sonar.projectKey>
-        <powsybl-dynawo-security-analysis.version>2.8.0</powsybl-dynawo-security-analysis.version>
+        <!-- TODO to remove when fix powsybl-dynawo pom in the next release 2.9.0 -->
+        <!-- pom is not aware the current version of powsybl-dynawo-security-analysis -->
+        <powsybl-dynawo.version>2.8.0</powsybl-dynawo.version>
     </properties>
 
     <build>
@@ -98,11 +100,6 @@
             </dependency>
 
             <!-- project specific dependencies -->
-            <dependency>
-                <groupId>com.powsybl</groupId>
-                <artifactId>powsybl-dynawo-security-analysis</artifactId>
-                <version>${powsybl-dynawo-security-analysis.version}</version>
-            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -144,6 +141,7 @@
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-dynawo-security-analysis</artifactId>
+            <version>${powsybl-dynawo.version}</version>
         </dependency>
 
         <!-- runtime dependencies -->
