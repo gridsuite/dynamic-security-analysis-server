@@ -31,14 +31,6 @@ public final class Utils {
 
     public static final String RESOURCE_PATH_DELIMITER = "/";
 
-    public static final String INDENT = " ";
-
-    public static final String INDENT_2 = INDENT.repeat(2);
-
-    public static final String INDENT_4 = INDENT_2.repeat(2);
-
-    public static final String INDENT_8 = INDENT_4.repeat(2);
-
     private Utils() {
         throw new AssertionError("Utility class should not be instantiated");
     }
