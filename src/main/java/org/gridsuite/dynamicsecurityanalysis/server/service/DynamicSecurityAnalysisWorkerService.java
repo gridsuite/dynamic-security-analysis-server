@@ -289,16 +289,16 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
             if (contingencyReportNode != null) {
                 contingencyReportNode.newReportNode()
                         .withSeverity(postContingencyResult.getStatus() == PostContingencyComputationStatus.CONVERGED ? TypedValue.INFO_SEVERITY : TypedValue.ERROR_SEVERITY)
-                        .withMessageTemplate("saContingencyStatus", INDENT_4 + "Status : ${contingencyStatus}")
+                        .withMessageTemplate("dynamicsecurityanalysis.server.saContingencyStatus")
                         .withUntypedValue("contingencyStatus", postContingencyResult.getStatus().name()).add();
                 if (isNotEmpty(limitViolations)) {
                     ReportNode limitViolationsReportNode = contingencyReportNode.newReportNode()
-                            .withMessageTemplate("limitViolations", INDENT_4 + "Limit Violations")
+                            .withMessageTemplate("dynamicsecurityanalysis.server.limitViolations")
                             .add();
                     for (LimitViolation limitViolation : limitViolations) {
                         limitViolationsReportNode.newReportNode()
                                 .withSeverity(TypedValue.TRACE_SEVERITY)
-                                .withMessageTemplate("limitViolation", INDENT_8 + "${count}. ${limitViolation}")
+                                .withMessageTemplate("dynamicsecurityanalysis.server.limitViolation")
                                 .withUntypedValue("count", limitViolations.indexOf(limitViolation) + 1)
                                 .withUntypedValue("limitViolation", limitViolation.toString())
                                 .add();

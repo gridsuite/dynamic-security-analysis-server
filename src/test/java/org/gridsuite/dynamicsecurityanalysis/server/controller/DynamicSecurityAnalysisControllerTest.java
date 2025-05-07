@@ -285,8 +285,10 @@ public class DynamicSecurityAnalysisControllerTest extends AbstractDynamicSecuri
         doAnswer(invocation -> {
             Object[] args = invocation.getArguments();
             if (args[0] instanceof DynamicSecurityAnalysisRunContext runContext && runContext.getReportInfos().reportUuid() != null) {
-                ReportNode dsaReportNode = runContext.getReportNode().newReportNode().withMessageTemplate("dsa", "").add();
-                dsaReportNode.newReportNode().withMessageTemplate("saContingency", "Contingency '${contingencyId}'")
+                ReportNode dsaReportNode = runContext.getReportNode().newReportNode()
+                        .withResourceBundles("i18n.reports")
+                        .withMessageTemplate("dsa").add();
+                dsaReportNode.newReportNode().withMessageTemplate("saContingency")
                         .withUntypedValue("contingencyId", "contingencyId01")
                         .add();
             }
