@@ -7,10 +7,8 @@
 package org.gridsuite.dynamicsecurityanalysis.server.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.powsybl.commons.io.FileUtil;
 import com.powsybl.commons.report.ReportNode;
 import com.powsybl.commons.report.TypedValue;
-import com.powsybl.computation.ComputationManager;
 import com.powsybl.contingency.ContingenciesProvider;
 import com.powsybl.contingency.Contingency;
 import com.powsybl.dynamicsimulation.DynamicModelsSupplier;
@@ -45,8 +43,6 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
@@ -58,9 +54,8 @@ import java.util.function.Consumer;
 
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException.Type.CONTINGENCIES_NOT_FOUND;
-import static org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException.Type.DUMP_FILE_ERROR;
 import static org.gridsuite.dynamicsecurityanalysis.server.service.DynamicSecurityAnalysisService.COMPUTATION_TYPE;
-import static org.gridsuite.dynamicsecurityanalysis.server.utils.Utils.*;
+import static org.gridsuite.dynamicsecurityanalysis.server.utils.Utils.getReportNode;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -89,15 +84,6 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
         this.dynamicSimulationClient = Objects.requireNonNull(dynamicSimulationClient);
         this.actionsClient = Objects.requireNonNull(actionsClient);
         this.parametersService = Objects.requireNonNull(parametersService);
-    }
-
-    /**
-     * Use this method to mock with DockerLocalComputationManager in case of integration tests with test container
-     *
-     * @return a computation manager
-     */
-    public ComputationManager getComputationManager() {
-        return executionService.getComputationManager();
     }
 
     @Override
@@ -181,12 +167,8 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
         runContext.setDynamicModelContent(dynamicModel);
         runContext.setDynamicSecurityAnalysisParameters(parameters);
 
-        // create a working folder for this run
-        Path workDir;
-        workDir = createWorkingDirectory();
-        runContext.setWorkDir(workDir);
-
         // enrich dump parameters
+        Path workDir = runContext.getComputationManager().getLocalDir();
         parametersService.setupDumpParameters(workDir, parameters.getDynamicSimulationParameters(), dynamicSimulationZippedOutputState);
     }
 
@@ -207,7 +189,7 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
                 parameters.getDynamicContingenciesParameters().getContingenciesStartTime());
 
         DynamicSecurityAnalysisRunParameters runParameters = new DynamicSecurityAnalysisRunParameters()
-                .setComputationManager(getComputationManager())
+                .setComputationManager(runContext.getComputationManager())
                 .setDynamicSecurityAnalysisParameters(parameters)
                 .setReportNode(runContext.getReportNode());
 
@@ -244,38 +226,6 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
     @Override
     public Consumer<Message<String>> consumeCancel() {
         return super.consumeCancel();
-    }
-
-    @Override
-    protected void clean(AbstractResultContext<DynamicSecurityAnalysisRunContext> resultContext) {
-        super.clean(resultContext);
-        // clean working directory
-        Path workDir = resultContext.getRunContext().getWorkDir();
-        removeWorkingDirectory(workDir);
-    }
-
-    private Path createWorkingDirectory() {
-        Path workDir;
-        Path localDir = getComputationManager().getLocalDir();
-        try {
-            workDir = Files.createTempDirectory(localDir, "dynamic_security_analysis_");
-        } catch (IOException e) {
-            throw new DynamicSecurityAnalysisException(DUMP_FILE_ERROR, String.format("Error occurred while creating a working directory inside the local directory %s",
-                    localDir.toAbsolutePath()));
-        }
-        return workDir;
-    }
-
-    private void removeWorkingDirectory(Path workDir) {
-        if (workDir != null) {
-            try {
-                FileUtil.removeDir(workDir);
-            } catch (IOException e) {
-                LOGGER.error(String.format("%s: Error occurred while cleaning working directory at %s", getComputationType(), workDir.toAbsolutePath()), e);
-            }
-        } else {
-            LOGGER.info("{}: No working directory to clean", getComputationType());
-        }
     }
 
     // --- TODO remove these reports when powsybl-dynawo implements --- //
