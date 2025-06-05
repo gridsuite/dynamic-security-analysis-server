@@ -38,7 +38,7 @@ class DynamicSecurityAnalysisResultServiceTest {
     DynamicSecurityAnalysisResultService dynamicSecurityAnalysisResultService;
 
     @AfterEach
-    public void cleanDB() {
+    void cleanDB() {
         resultRepository.deleteAll();
     }
 
@@ -89,8 +89,8 @@ class DynamicSecurityAnalysisResultServiceTest {
         // --- delete all --- //
         LOGGER.info("Test delete all results");
         resultRepository.saveAllAndFlush(List.of(
-                new DynamicSecurityAnalysisResultEntity(UUID.randomUUID(), DynamicSecurityAnalysisStatus.RUNNING),
-                new DynamicSecurityAnalysisResultEntity(UUID.randomUUID(), DynamicSecurityAnalysisStatus.RUNNING)
+                new DynamicSecurityAnalysisResultEntity(UUID.randomUUID(), DynamicSecurityAnalysisStatus.RUNNING, null),
+                new DynamicSecurityAnalysisResultEntity(UUID.randomUUID(), DynamicSecurityAnalysisStatus.RUNNING, null)
         ));
 
         dynamicSecurityAnalysisResultService.deleteAll();

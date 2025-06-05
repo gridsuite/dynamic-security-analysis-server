@@ -25,9 +25,10 @@ import java.util.UUID;
 @Entity
 public class DynamicSecurityAnalysisResultEntity {
 
-    public DynamicSecurityAnalysisResultEntity(UUID id, DynamicSecurityAnalysisStatus status) {
+    public DynamicSecurityAnalysisResultEntity(UUID id, DynamicSecurityAnalysisStatus status, String debugFilePath) {
         this.id = id;
         this.status = status;
+        this.debugFileLocation = debugFilePath;
     }
 
     @Id
@@ -37,5 +38,8 @@ public class DynamicSecurityAnalysisResultEntity {
     @Column(name = "status")
     @Enumerated(EnumType.STRING)
     private DynamicSecurityAnalysisStatus status;
+
+    @Column(name = "debugFileLocation")
+    private String debugFileLocation;
 
 }

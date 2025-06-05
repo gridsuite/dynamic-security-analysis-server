@@ -38,8 +38,8 @@ public class DynamicSecurityAnalysisRunContext extends AbstractComputationRunCon
 
     @Builder
     public DynamicSecurityAnalysisRunContext(UUID networkUuid, String variantId, String receiver, String provider,
-                                             ReportInfos reportInfos, String userId, DynamicSecurityAnalysisParametersInfos parameters) {
-        super(networkUuid, variantId, receiver, reportInfos, userId, provider, parameters);
+                                             ReportInfos reportInfos, String userId, DynamicSecurityAnalysisParametersInfos parameters, Boolean debug) {
+        super(networkUuid, variantId, receiver, reportInfos, userId, provider, parameters, debug);
     }
 }
 

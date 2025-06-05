@@ -140,7 +140,7 @@ public abstract class AbstractDynamicSecurityAnalysisControllerTest extends Abst
 
     private void initDynamicSecurityAnalysisWorkerServiceSpy() {
         // setup spy bean
-        when(dynamicSecurityAnalysisWorkerService.createComputationManager()).thenReturn(computationManager);
+        when(dynamicSecurityAnalysisWorkerService.getComputationManager()).thenReturn(computationManager);
     }
 
     // --- utility methods --- //
