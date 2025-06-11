@@ -43,7 +43,7 @@ public class DynamicSecurityAnalysisResultService extends AbstractComputationRes
     public void insertStatus(List<UUID> resultUuids, DynamicSecurityAnalysisStatus status) {
         Objects.requireNonNull(resultUuids);
         resultRepository.saveAll(resultUuids.stream()
-            .map(uuid -> new DynamicSecurityAnalysisResultEntity(uuid, status)).toList());
+            .map(uuid -> new DynamicSecurityAnalysisResultEntity(uuid, status, null)).toList());
     }
 
     @Transactional
@@ -65,6 +65,15 @@ public class DynamicSecurityAnalysisResultService extends AbstractComputationRes
     }
 
     @Override
+    @org.springframework.transaction.annotation.Transactional
+    public void updateDebugFileLocation(UUID resultUuid, String debugFilePath) {
+        resultRepository.findById(resultUuid).ifPresentOrElse(
+                (var resultEntity) -> resultRepository.updateDebugFileLocation(resultUuid, debugFilePath),
+                () -> resultRepository.save(new DynamicSecurityAnalysisResultEntity(resultUuid, DynamicSecurityAnalysisStatus.NOT_DONE, debugFilePath))
+        );
+    }
+
+    @Override
     public void delete(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
         resultRepository.deleteById(resultUuid);
@@ -82,5 +91,13 @@ public class DynamicSecurityAnalysisResultService extends AbstractComputationRes
         return resultRepository.findById(resultUuid)
             .map(DynamicSecurityAnalysisResultEntity::getStatus)
             .orElse(null);
+    }
+
+    @Override
+    public String findDebugFileLocation(UUID resultUuid) {
+        Objects.requireNonNull(resultUuid);
+        return resultRepository.findById(resultUuid)
+                .map(DynamicSecurityAnalysisResultEntity::getDebugFileLocation)
+                .orElse(null);
     }
 }

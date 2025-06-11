@@ -12,6 +12,7 @@ import com.powsybl.security.dynamic.DynamicSecurityAnalysisProvider;
 import com.powsybl.ws.commons.computation.service.AbstractComputationService;
 import com.powsybl.ws.commons.computation.service.NotificationService;
 import com.powsybl.ws.commons.computation.service.UuidGeneratorService;
+import com.powsybl.ws.commons.s3.S3Service;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.DynamicSecurityAnalysisStatus;
 import org.gridsuite.dynamicsecurityanalysis.server.service.contexts.DynamicSecurityAnalysisResultContext;
 import org.gridsuite.dynamicsecurityanalysis.server.service.contexts.DynamicSecurityAnalysisRunContext;
@@ -36,8 +37,9 @@ public class DynamicSecurityAnalysisService extends AbstractComputationService<D
             ObjectMapper objectMapper,
             UuidGeneratorService uuidGeneratorService,
             DynamicSecurityAnalysisResultService dynamicSecurityAnalysisResultService,
+            S3Service s3Service,
             @Value("${dynamic-security-analysis.default-provider}") String defaultProvider) {
-        super(notificationService, dynamicSecurityAnalysisResultService, objectMapper, uuidGeneratorService, defaultProvider);
+        super(notificationService, dynamicSecurityAnalysisResultService, s3Service, objectMapper, uuidGeneratorService, defaultProvider);
     }
 
     @Override
