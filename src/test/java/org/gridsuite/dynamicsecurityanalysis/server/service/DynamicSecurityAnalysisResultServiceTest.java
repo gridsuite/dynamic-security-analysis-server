@@ -75,6 +75,22 @@ class DynamicSecurityAnalysisResultServiceTest {
         LOGGER.info("Actual updated result status = {}", updatedResultEntityOpt.get().getStatus());
         assertThat(updatedResultEntityOpt.get().getStatus()).isSameAs(DynamicSecurityAnalysisStatus.NOT_DONE);
 
+        // --- update the result with debugFileLocation
+        dynamicSecurityAnalysisResultService.updateDebugFileLocation(resultUuid, "/debug/s3key");
+
+        // new debugFileLocation must be inserted
+        updatedResultEntityOpt = resultRepository.findById(resultUuid);
+        assertThat(updatedResultEntityOpt.get().getDebugFileLocation()).isSameAs("/debug/s3key");
+
+        // --- update the result with debugFileLocation, if entity uuid does not exist, inject a new one
+        UUID noneExistEntityUuid = UUID.randomUUID();
+        dynamicSecurityAnalysisResultService.updateDebugFileLocation(noneExistEntityUuid, "/debug/s3key2");
+
+        // new debugFileLocation must be inserted
+        updatedResultEntityOpt = resultRepository.findById(noneExistEntityUuid);
+        assertThat(updatedResultEntityOpt.get().getStatus()).isSameAs(DynamicSecurityAnalysisStatus.NOT_DONE);
+        assertThat(updatedResultEntityOpt.get().getDebugFileLocation()).isSameAs("/debug/s3key2");
+
         // --- delete result --- //
         LOGGER.info("Test delete a result");
         dynamicSecurityAnalysisResultService.delete(resultUuid);
