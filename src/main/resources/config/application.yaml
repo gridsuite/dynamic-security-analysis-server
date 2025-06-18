@@ -53,6 +53,8 @@ spring:
         access-key: minioadmin
         secret-key: minioadmin
 
+debug-subpath: debug
+
 powsybl-ws:
   database:
     name: dynamicsecurityanalysis
