@@ -18,6 +18,7 @@ import org.gridsuite.dynamicsecurityanalysis.server.service.DynamicSecurityAnaly
 import org.gridsuite.dynamicsecurityanalysis.server.service.DynamicSecurityAnalysisService;
 import org.gridsuite.dynamicsecurityanalysis.server.service.ParametersService;
 import org.gridsuite.dynamicsecurityanalysis.server.service.contexts.DynamicSecurityAnalysisRunContext;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -61,6 +62,7 @@ public class DynamicSecurityAnalysisController {
                                           @RequestParam(name = REPORTER_ID_HEADER, required = false) String reportName,
                                           @RequestParam(name = REPORT_TYPE_HEADER, required = false, defaultValue = "DynamicSecurityAnalysis") String reportType,
                                           @RequestParam(name = HEADER_PROVIDER, required = false) String provider,
+                                          @RequestParam(name = "debug", required = false, defaultValue = "false") boolean debug,
                                           @RequestParam(name = "dynamicSimulationResultUuid") UUID dynamicSimulationResultUuid,
                                           @RequestParam(name = "parametersUuid") UUID parametersUuid,
                                           @RequestHeader(HEADER_USER_ID) String userId) {
@@ -73,7 +75,8 @@ public class DynamicSecurityAnalysisController {
             ReportInfos.builder().reportUuid(reportId).reporterId(reportName).computationType(reportType).build(),
             userId,
             dynamicSimulationResultUuid,
-            parametersUuid);
+            parametersUuid,
+            debug);
 
         UUID resultUuid = dynamicSecurityAnalysisService.runAndSaveResult(dynamicSecurityAnalysisRunContext);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);
@@ -138,4 +141,13 @@ public class DynamicSecurityAnalysisController {
     public ResponseEntity<String> getDefaultProvider() {
         return ResponseEntity.ok().body(dynamicSecurityAnalysisService.getDefaultProvider());
     }
+
+    @GetMapping(value = "/results/{resultUuid}/download-debug-file", produces = "application/json")
+    @Operation(summary = "Download a dynamic security analysis debug file")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Dynamic security analysis debug file"),
+        @ApiResponse(responseCode = "404", description = "Dynamic security analysis debug file has not been found")})
+    public ResponseEntity<Resource> downloadDebugFile(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
+        return dynamicSecurityAnalysisService.downloadDebugFile(resultUuid);
+    }
+
 }
