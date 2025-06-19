@@ -8,6 +8,7 @@
 package org.gridsuite.dynamicsecurityanalysis.server.entities;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -22,14 +23,9 @@ import java.util.UUID;
 @Setter
 @Table(name = "dynamic_security_analysis_result")
 @NoArgsConstructor
+@AllArgsConstructor
 @Entity
 public class DynamicSecurityAnalysisResultEntity {
-
-    public DynamicSecurityAnalysisResultEntity(UUID id, DynamicSecurityAnalysisStatus status, String debugFilePath) {
-        this.id = id;
-        this.status = status;
-        this.debugFileLocation = debugFilePath;
-    }
 
     @Id
     @Column(name = "result_uuid")

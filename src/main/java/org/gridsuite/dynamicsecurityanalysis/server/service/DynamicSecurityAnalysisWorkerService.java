@@ -261,7 +261,7 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
 
     @Override
     protected void processDebug(AbstractResultContext<DynamicSecurityAnalysisRunContext> resultContext) {
-        // copy all content in working directory into debug directory
+        // copy all content from working directory into debug directory
         DynamicSecurityAnalysisRunContext runContext = resultContext.getRunContext();
         if (runContext.getWorkDir() != null && runContext.getDebugDir() != null) {
             try {
