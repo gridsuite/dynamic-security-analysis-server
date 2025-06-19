@@ -142,7 +142,7 @@ public class DynamicSecurityAnalysisController {
         return ResponseEntity.ok().body(dynamicSecurityAnalysisService.getDefaultProvider());
     }
 
-    @GetMapping(value = "/results/{resultUuid}/download/debug-file", produces = "application/json")
+    @GetMapping(value = "/results/{resultUuid}/download-debug-file", produces = "application/json")
     @Operation(summary = "Download a dynamic security analysis debug file")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Dynamic security analysis debug file"),
         @ApiResponse(responseCode = "404", description = "Dynamic security analysis debug file has not been found")})
