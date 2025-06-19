@@ -8,7 +8,6 @@
 package org.gridsuite.dynamicsecurityanalysis.server.service;
 
 import com.powsybl.ws.commons.computation.service.AbstractComputationResultService;
-import jakarta.transaction.Transactional;
 import org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.DynamicSecurityAnalysisStatus;
 import org.gridsuite.dynamicsecurityanalysis.server.entities.DynamicSecurityAnalysisResultEntity;
@@ -16,6 +15,7 @@ import org.gridsuite.dynamicsecurityanalysis.server.repositories.DynamicSecurity
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Objects;
@@ -65,8 +65,8 @@ public class DynamicSecurityAnalysisResultService extends AbstractComputationRes
     }
 
     @Override
-    @org.springframework.transaction.annotation.Transactional
-    public void updateDebugFileLocation(UUID resultUuid, String debugFilePath) {
+    @Transactional
+    public void saveDebugFileLocation(UUID resultUuid, String debugFilePath) {
         resultRepository.findById(resultUuid).ifPresentOrElse(
                 (var resultEntity) -> resultRepository.updateDebugFileLocation(resultUuid, debugFilePath),
                 () -> resultRepository.save(new DynamicSecurityAnalysisResultEntity(resultUuid, DynamicSecurityAnalysisStatus.NOT_DONE, debugFilePath))
@@ -74,6 +74,7 @@ public class DynamicSecurityAnalysisResultService extends AbstractComputationRes
     }
 
     @Override
+    @Transactional
     public void delete(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
         resultRepository.deleteById(resultUuid);
@@ -86,6 +87,7 @@ public class DynamicSecurityAnalysisResultService extends AbstractComputationRes
     }
 
     @Override
+    @Transactional(readOnly = true)
     public DynamicSecurityAnalysisStatus findStatus(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
         return resultRepository.findById(resultUuid)
@@ -94,6 +96,7 @@ public class DynamicSecurityAnalysisResultService extends AbstractComputationRes
     }
 
     @Override
+    @Transactional(readOnly = true)
     public String findDebugFileLocation(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
         return resultRepository.findById(resultUuid)
