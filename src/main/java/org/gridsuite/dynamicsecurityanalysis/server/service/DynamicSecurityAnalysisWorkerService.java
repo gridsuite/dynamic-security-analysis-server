@@ -297,7 +297,7 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
                             .add();
                     for (LimitViolation limitViolation : limitViolations) {
                         limitViolationsReportNode.newReportNode()
-                                .withSeverity(TypedValue.TRACE_SEVERITY)
+                                .withSeverity(TypedValue.DETAIL_SEVERITY)
                                 .withMessageTemplate("dynamicsecurityanalysis.server.limitViolation")
                                 .withUntypedValue("count", limitViolations.indexOf(limitViolation) + 1)
                                 .withUntypedValue("limitViolation", limitViolation.toString())
