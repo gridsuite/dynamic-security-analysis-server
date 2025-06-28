@@ -8,7 +8,6 @@ package org.gridsuite.dynamicsecurityanalysis.server.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.powsybl.commons.io.FileUtil;
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
 import com.powsybl.dynamicsimulation.DynamicSimulationProvider;
 import com.powsybl.dynawo.DumpFileParameters;
@@ -57,7 +56,8 @@ public class ParametersService {
     public DynamicSecurityAnalysisRunContext createRunContext(UUID networkUuid, String variantId, String receiver,
                                                               String provider, ReportInfos reportInfos, String userId,
                                                               UUID dynamicSimulationResultUuid,
-                                                              UUID dynamicSecurityAnalysisParametersUuid) {
+                                                              UUID dynamicSecurityAnalysisParametersUuid,
+                                                              boolean debug) {
 
         // get parameters from the local database
         DynamicSecurityAnalysisParametersInfos dynamicSecurityAnalysisParametersInfos = getParameters(dynamicSecurityAnalysisParametersUuid);
@@ -70,6 +70,7 @@ public class ParametersService {
                 .reportInfos(reportInfos)
                 .userId(userId)
                 .parameters(dynamicSecurityAnalysisParametersInfos)
+                .debug(debug)
                 .build();
         runContext.setDynamicSimulationResultUuid(dynamicSimulationResultUuid);
 
@@ -93,11 +94,9 @@ public class ParametersService {
     // --- Dynamic simulation result related methods --- //
 
     public void setupDumpParameters(Path workDir, DynamicSimulationParameters dynamicSimulationParameters, byte[] zippedOutputState) {
-        Path dumpDir = workDir.resolve("dump");
-        FileUtil.createDirectory(dumpDir);
-        Path dumpFile = unZipDumpFile(dumpDir, zippedOutputState);
+        Path dumpFile = unZipDumpFile(workDir, zippedOutputState);
         DynawoSimulationParameters dynawoSimulationParameters = dynamicSimulationParameters.getExtension(DynawoSimulationParameters.class);
-        dynawoSimulationParameters.setDumpFileParameters(DumpFileParameters.createImportDumpFileParameters(dumpDir, dumpFile.getFileName().toString()));
+        dynawoSimulationParameters.setDumpFileParameters(DumpFileParameters.createImportDumpFileParameters(workDir, dumpFile.getFileName().toString()));
     }
 
     private Path unZipDumpFile(Path dumpDir, byte[] zippedOutputState) {

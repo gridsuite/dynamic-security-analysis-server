@@ -53,6 +53,7 @@ public abstract class AbstractDynamicSecurityAnalysisControllerTest extends Abst
 
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
+    protected final String dsaDebugDestination = "dsa.debug.destination";
     protected final String dsaResultDestination = "dsa.result.destination";
     protected final String dsaStoppedDestination = "dsa.stopped.destination";
     protected final String dsaCancelFailedDestination = "dsa.cancelfailed.destination";
@@ -121,7 +122,7 @@ public abstract class AbstractDynamicSecurityAnalysisControllerTest extends Abst
 
         // check messages in rabbitmq
         OutputDestination output = getOutputDestination();
-        List<String> destinations = List.of(dsaResultDestination, dsaStoppedDestination, dsaCancelFailedDestination);
+        List<String> destinations = List.of(dsaDebugDestination, dsaResultDestination, dsaStoppedDestination, dsaCancelFailedDestination);
 
         TestUtils.assertQueuesEmptyThenClear(destinations, output);
     }
