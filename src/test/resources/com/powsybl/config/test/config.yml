@@ -2,3 +2,8 @@ dynawo:
   # home dir references to directory inside the container java-dynawo
   homeDir: /dynaflow-launcher
   debug: true
+
+dynawo-algorithms:
+  # home dir references to directory inside the container java-dynawo
+  homeDir: /dynaflow-launcher
+  debug: true
