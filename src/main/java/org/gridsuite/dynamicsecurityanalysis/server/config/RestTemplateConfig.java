@@ -12,7 +12,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.powsybl.commons.report.ReportNodeJsonModule;
 import com.powsybl.dynamicsimulation.json.DynamicSimulationParametersJsonModule;
 import com.powsybl.security.dynamic.json.DynamicSecurityAnalysisJsonModule;
-import com.powsybl.ws.commons.computation.ComputationConfig;
+import org.gridsuite.computation.ComputationConfig;
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;

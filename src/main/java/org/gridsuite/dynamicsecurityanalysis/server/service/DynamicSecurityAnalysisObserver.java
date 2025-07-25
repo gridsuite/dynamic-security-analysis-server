@@ -8,10 +8,10 @@ package org.gridsuite.dynamicsecurityanalysis.server.service;
 
 import com.powsybl.loadflow.LoadFlowResult;
 import com.powsybl.security.SecurityAnalysisReport;
-import com.powsybl.ws.commons.computation.service.AbstractComputationObserver;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.observation.ObservationRegistry;
 import lombok.NonNull;
+import org.gridsuite.computation.service.AbstractComputationObserver;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.parameters.DynamicSecurityAnalysisParametersInfos;
 import org.springframework.stereotype.Service;
 

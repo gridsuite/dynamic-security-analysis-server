@@ -32,10 +32,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static com.powsybl.ws.commons.computation.service.AbstractResultContext.VARIANT_ID_HEADER;
-import static com.powsybl.ws.commons.computation.service.NotificationService.HEADER_RESULT_UUID;
-import static com.powsybl.ws.commons.computation.service.NotificationService.HEADER_USER_ID;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.gridsuite.computation.service.AbstractResultContext.VARIANT_ID_HEADER;
+import static org.gridsuite.computation.service.NotificationService.HEADER_RESULT_UUID;
+import static org.gridsuite.computation.service.NotificationService.HEADER_USER_ID;
 import static org.gridsuite.dynamicsecurityanalysis.server.utils.Utils.RESOURCE_PATH_DELIMITER;
 import static org.gridsuite.dynamicsecurityanalysis.server.utils.Utils.zip;
 import static org.mockito.ArgumentMatchers.anyList;
