@@ -28,8 +28,8 @@ import com.powsybl.security.dynamic.DynamicSecurityAnalysis;
 import com.powsybl.security.dynamic.DynamicSecurityAnalysisParameters;
 import com.powsybl.security.dynamic.DynamicSecurityAnalysisRunParameters;
 import com.powsybl.security.results.PostContingencyResult;
-import com.powsybl.ws.commons.computation.service.*;
 import org.apache.commons.collections4.CollectionUtils;
+import org.gridsuite.computation.service.*;
 import org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.DynamicSecurityAnalysisStatus;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.contingency.ContingencyInfos;
@@ -60,7 +60,7 @@ import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException.Type.CONTINGENCIES_NOT_FOUND;
 import static org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException.Type.DUMP_FILE_ERROR;
 import static org.gridsuite.dynamicsecurityanalysis.server.service.DynamicSecurityAnalysisService.COMPUTATION_TYPE;
-import static org.gridsuite.dynamicsecurityanalysis.server.utils.Utils.*;
+import static org.gridsuite.dynamicsecurityanalysis.server.utils.Utils.getReportNode;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>

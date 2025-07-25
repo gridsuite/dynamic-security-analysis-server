@@ -7,8 +7,8 @@
 
 package org.gridsuite.dynamicsecurityanalysis.server.service;
 
-import com.powsybl.ws.commons.computation.service.AbstractComputationResultService;
 import jakarta.transaction.Transactional;
+import org.gridsuite.computation.service.AbstractComputationResultService;
 import org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.DynamicSecurityAnalysisStatus;
 import org.gridsuite.dynamicsecurityanalysis.server.entities.DynamicSecurityAnalysisResultEntity;
