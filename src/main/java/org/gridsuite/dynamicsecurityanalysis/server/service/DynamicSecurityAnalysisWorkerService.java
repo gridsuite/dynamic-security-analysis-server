@@ -29,7 +29,7 @@ import com.powsybl.security.dynamic.DynamicSecurityAnalysisParameters;
 import com.powsybl.security.dynamic.DynamicSecurityAnalysisRunParameters;
 import com.powsybl.security.results.PostContingencyResult;
 import org.apache.commons.collections4.CollectionUtils;
-import org.gridsuite.computation.s3.S3Service;
+import org.gridsuite.computation.s3.ComputationS3Service;
 import org.gridsuite.computation.service.*;
 import org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.DynamicSecurityAnalysisStatus;
@@ -83,11 +83,11 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
                                                 DynamicSecurityAnalysisObserver observer,
                                                 ObjectMapper objectMapper,
                                                 DynamicSecurityAnalysisResultService dynamicSecurityAnalysisResultService,
-                                                S3Service s3Service,
+                                                ComputationS3Service computationS3Service,
                                                 DynamicSimulationClient dynamicSimulationClient,
                                                 ActionsClient actionsClient,
                                                 ParametersService parametersService) {
-        super(networkStoreService, notificationService, reportService, dynamicSecurityAnalysisResultService, s3Service, executionService, observer, objectMapper);
+        super(networkStoreService, notificationService, reportService, dynamicSecurityAnalysisResultService, computationS3Service, executionService, observer, objectMapper);
         this.dynamicSimulationClient = Objects.requireNonNull(dynamicSimulationClient);
         this.actionsClient = Objects.requireNonNull(actionsClient);
         this.parametersService = Objects.requireNonNull(parametersService);

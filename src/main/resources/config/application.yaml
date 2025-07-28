@@ -40,9 +40,9 @@ spring:
                 enabled: true
                 delivery-limit: 2
 
-    aws:
-      s3:
-        enabled: true
+computation:
+  s3:
+    enabled: true
 
 debug-subpath: debug
 
