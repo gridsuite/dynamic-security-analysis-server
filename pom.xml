@@ -42,14 +42,17 @@
     </developers>
 
     <properties>
-        <gridsuite-dependencies.version>39.0.0</gridsuite-dependencies.version>
+        <gridsuite-dependencies.version>42.0.0</gridsuite-dependencies.version>
+        <!-- FIXME to remove at next upgrade of gridsuite-dependencies -->
+        <gridsuite-computation.version>1.1.0-SNAPSHOT</gridsuite-computation.version>
+        <!-- FIXME to remove at next upgrade of powsybl-ws-dependencies -->
+        <powsybl-ws-commons.version>1.29.0-SNAPSHOT</powsybl-ws-commons.version>
+
         <jib.from.image>powsybl/java-dynawo:3.0.0</jib.from.image>
         <liquibase-hibernate-package>org.gridsuite.dynamicsecurityanalysis.server</liquibase-hibernate-package>
         <sonar.organization>gridsuite</sonar.organization>
         <spring-cloud-aws.version>3.2.0</spring-cloud-aws.version>
         <sonar.projectKey>org.gridsuite:dynamic-security-analysis-server</sonar.projectKey>
-        <!-- FIXME: powsybl-ws-commons modules'version is overloaded in the dependencies section to be removed at next powsybl-ws-dependencies.version upgrade -->
-        <powsybl-ws-commons.version>1.26.0-SNAPSHOT</powsybl-ws-commons.version>
     </properties>
 
     <build>
@@ -89,26 +92,7 @@
     <dependencyManagement>
         <dependencies>
             <!-- overrides of imports -->
-            <dependency>
-                <groupId>com.powsybl</groupId>
-                <artifactId>powsybl-computation-local</artifactId>
-                <version>6.8.0-SNAPSHOT</version>
-            </dependency>
-            <dependency>
-                <groupId>com.powsybl</groupId>
-                <artifactId>powsybl-computation</artifactId>
-                <version>6.8.0-SNAPSHOT</version>
-            </dependency>
-            <dependency>
-                <groupId>com.powsybl</groupId>
-                <artifactId>powsybl-iidm-api</artifactId>
-                <version>6.8.0-SNAPSHOT</version>
-            </dependency>
-            <dependency>
-                <groupId>com.powsybl</groupId>
-                <artifactId>powsybl-dynamic-security-analysis</artifactId>
-                <version>6.8.0-SNAPSHOT</version>
-            </dependency>
+
             <!-- imports -->
             <dependency>
                 <groupId>org.gridsuite</groupId>
@@ -166,7 +150,12 @@
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-dynawo-security-analysis</artifactId>
-            <version>2.9.0-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.gridsuite</groupId>
+            <artifactId>gridsuite-computation</artifactId>
+            <version>${gridsuite-computation.version}</version>
         </dependency>
 
         <!-- runtime dependencies -->

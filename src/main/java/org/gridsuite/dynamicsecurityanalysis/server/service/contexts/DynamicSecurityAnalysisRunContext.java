@@ -8,11 +8,11 @@ package org.gridsuite.dynamicsecurityanalysis.server.service.contexts;
 
 import com.powsybl.dynawo.suppliers.dynamicmodels.DynamicModelConfig;
 import com.powsybl.security.dynamic.DynamicSecurityAnalysisParameters;
-import com.powsybl.ws.commons.computation.dto.ReportInfos;
-import com.powsybl.ws.commons.computation.service.AbstractComputationRunContext;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+import org.gridsuite.computation.dto.ReportInfos;
+import org.gridsuite.computation.service.AbstractComputationRunContext;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.contingency.ContingencyInfos;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.parameters.DynamicSecurityAnalysisParametersInfos;
 

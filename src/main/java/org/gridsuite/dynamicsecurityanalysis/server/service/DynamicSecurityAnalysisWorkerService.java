@@ -28,9 +28,9 @@ import com.powsybl.security.dynamic.DynamicSecurityAnalysis;
 import com.powsybl.security.dynamic.DynamicSecurityAnalysisParameters;
 import com.powsybl.security.dynamic.DynamicSecurityAnalysisRunParameters;
 import com.powsybl.security.results.PostContingencyResult;
-import com.powsybl.ws.commons.computation.service.*;
-import com.powsybl.ws.commons.s3.S3Service;
 import org.apache.commons.collections4.CollectionUtils;
+import org.gridsuite.computation.s3.S3Service;
+import org.gridsuite.computation.service.*;
 import org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.DynamicSecurityAnalysisStatus;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.contingency.ContingencyInfos;
@@ -305,7 +305,7 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
                             .add();
                     for (LimitViolation limitViolation : limitViolations) {
                         limitViolationsReportNode.newReportNode()
-                                .withSeverity(TypedValue.TRACE_SEVERITY)
+                                .withSeverity(TypedValue.DETAIL_SEVERITY)
                                 .withMessageTemplate("dynamicsecurityanalysis.server.limitViolation")
                                 .withUntypedValue("count", limitViolations.indexOf(limitViolation) + 1)
                                 .withUntypedValue("limitViolation", limitViolation.toString())

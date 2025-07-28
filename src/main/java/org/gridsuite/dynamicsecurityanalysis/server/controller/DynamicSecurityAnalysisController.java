@@ -6,13 +6,13 @@
  */
 package org.gridsuite.dynamicsecurityanalysis.server.controller;
 
-import com.powsybl.ws.commons.computation.dto.ReportInfos;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.commons.collections4.CollectionUtils;
+import org.gridsuite.computation.dto.ReportInfos;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.DynamicSecurityAnalysisStatus;
 import org.gridsuite.dynamicsecurityanalysis.server.service.DynamicSecurityAnalysisResultService;
 import org.gridsuite.dynamicsecurityanalysis.server.service.DynamicSecurityAnalysisService;
@@ -26,8 +26,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
-import static com.powsybl.ws.commons.computation.service.AbstractResultContext.*;
-import static com.powsybl.ws.commons.computation.service.NotificationService.*;
+import static org.gridsuite.computation.service.AbstractResultContext.*;
+import static org.gridsuite.computation.service.NotificationService.*;
 import static org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisApi.API_VERSION;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
