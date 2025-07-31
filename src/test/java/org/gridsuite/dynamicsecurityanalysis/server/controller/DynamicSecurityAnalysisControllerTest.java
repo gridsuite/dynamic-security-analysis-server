@@ -32,11 +32,21 @@ import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
 import org.springframework.messaging.Message;
 import org.springframework.test.web.servlet.MvcResult;
+import software.amazon.awssdk.core.ResponseInputStream;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.http.AbortableInputStream;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -46,6 +56,8 @@ import java.util.function.Supplier;
 
 import static com.powsybl.network.store.model.NetworkStoreApi.VERSION;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.gridsuite.computation.s3.ComputationS3Service.METADATA_FILE_NAME;
+import static org.gridsuite.computation.service.AbstractResultContext.REPORTER_ID_HEADER;
 import static org.gridsuite.computation.service.AbstractResultContext.VARIANT_ID_HEADER;
 import static org.gridsuite.computation.service.NotificationService.*;
 import static org.gridsuite.dynamicsecurityanalysis.server.service.DynamicSecurityAnalysisService.COMPUTATION_TYPE;
@@ -86,6 +98,9 @@ public class DynamicSecurityAnalysisControllerTest extends AbstractDynamicSecuri
 
     @SpyBean
     private NotificationService notificationService;
+
+    @SpyBean
+    private S3Client s3Client;
 
     @Override
     public OutputDestination getOutputDestination() {
@@ -162,35 +177,58 @@ public class DynamicSecurityAnalysisControllerTest extends AbstractDynamicSecuri
     @Test
     void testResult() throws Exception {
 
+        // mock DynamicSecurityAnalysisWorkerService
         doReturn(CompletableFuture.completedFuture(new SecurityAnalysisReport(SecurityAnalysisResult.empty())))
                 .when(dynamicSecurityAnalysisWorkerService).getCompletableFuture(any(), any(), any());
 
-        //run the dynamic security analysis on a specific variant
+        // mock s3 client for run with debug
+        doReturn(PutObjectResponse.builder().build()).when(s3Client).putObject(eq(PutObjectRequest.builder().build()), any(RequestBody.class));
+        doReturn(new ResponseInputStream<>(
+                GetObjectResponse.builder()
+                        .metadata(Map.of(METADATA_FILE_NAME, "debugFile"))
+                        .contentLength(100L).build(),
+                AbortableInputStream.create(new ByteArrayInputStream("s3 debug file content".getBytes()))
+        )).when(s3Client).getObject(any(GetObjectRequest.class));
+
+        //run the dynamic security analysis on a specific variant with debug
         MvcResult result = mockMvc.perform(
-                        post("/v1/networks/{networkUuid}/run?"
-                             + "&" + VARIANT_ID_HEADER + "=" + VARIANT_1_ID
-                             + "&dynamicSimulationResultUuid=" + DYNAMIC_SIMULATION_RESULT_UUID
-                             + "&parametersUuid=" + PARAMETERS_UUID,
-                                NETWORK_UUID.toString())
-                                .contentType(APPLICATION_JSON)
-                                .header(HEADER_USER_ID, "testUserId"))
-                .andExpect(status().isOk())
+                        post("/v1/networks/{networkUuid}/run", NETWORK_UUID.toString())
+                        .param(VARIANT_ID_HEADER, VARIANT_1_ID)
+                        .param("dynamicSimulationResultUuid", DYNAMIC_SIMULATION_RESULT_UUID.toString())
+                        .param("parametersUuid", PARAMETERS_UUID.toString())
+                        .param(HEADER_DEBUG, "true")
+                        .contentType(APPLICATION_JSON)
+                        .header(HEADER_USER_ID, "testUserId"))
+                        .andExpect(status().isOk())
                 .andReturn();
         UUID runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
 
+        // check notification of result
         Message<byte[]> messageSwitch = output.receive(1000 * 10, dsaResultDestination);
         assertThat(messageSwitch.getHeaders()).containsEntry(HEADER_RESULT_UUID, runUuid.toString());
 
+        // check notification of debug
+        messageSwitch = output.receive(1000 * 10, dsaDebugDestination);
+        assertThat(messageSwitch.getHeaders())
+                .containsEntry(HEADER_RESULT_UUID, runUuid.toString());
+
+        // download debug zip file is ok
+        mockMvc.perform(get("/v1/results/{resultUuid}/download-debug-file", runUuid))
+                .andExpect(status().isOk());
+
+        // check interaction with s3 client
+        verify(s3Client, times(1)).putObject(any(PutObjectRequest.class), any(RequestBody.class));
+        verify(s3Client, times(1)).getObject(any(GetObjectRequest.class));
+
         //run the dynamic security analysis on the implicit default variant
         result = mockMvc.perform(
-                        post("/v1/networks/{networkUuid}/run?"
-                             + "&dynamicSimulationResultUuid=" + DYNAMIC_SIMULATION_RESULT_UUID
-                             + "&parametersUuid=" + PARAMETERS_UUID,
-                                NETWORK_UUID.toString())
-                                .contentType(APPLICATION_JSON)
-                                .header(HEADER_USER_ID, "testUserId"))
-                .andExpect(status().isOk())
-                .andReturn();
+                        post("/v1/networks/{networkUuid}/run", NETWORK_UUID.toString())
+                        .param("dynamicSimulationResultUuid", DYNAMIC_SIMULATION_RESULT_UUID.toString())
+                        .param("parametersUuid", PARAMETERS_UUID.toString())
+                        .contentType(APPLICATION_JSON)
+                        .header(HEADER_USER_ID, "testUserId"))
+                        .andExpect(status().isOk())
+                        .andReturn();
         runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
 
         messageSwitch = output.receive(1000 * 10, dsaResultDestination);
@@ -253,26 +291,24 @@ public class DynamicSecurityAnalysisControllerTest extends AbstractDynamicSecuri
     void testRunWithSynchronousExceptions() throws Exception {
         //run the dynamic security analysis on a non-exiting provider
         mockMvc.perform(
-                        post("/v1/networks/{networkUuid}/run?"
-                             + "&provider=notFoundProvider"
-                             + "&" + VARIANT_ID_HEADER + "=" + VARIANT_1_ID
-                             + "&dynamicSimulationResultUuid=" + DYNAMIC_SIMULATION_RESULT_UUID
-                             + "&parametersUuid=" + PARAMETERS_UUID,
-                                NETWORK_UUID.toString())
-                                .contentType(APPLICATION_JSON)
-                                .header(HEADER_USER_ID, "testUserId"))
-                .andExpect(status().isNotFound());
+                        post("/v1/networks/{networkUuid}/run", NETWORK_UUID.toString())
+                        .param(HEADER_PROVIDER, "notFoundProvider")
+                        .param(VARIANT_ID_HEADER, VARIANT_1_ID)
+                        .param("dynamicSimulationResultUuid", DYNAMIC_SIMULATION_RESULT_UUID.toString())
+                        .param("parametersUuid", PARAMETERS_UUID.toString())
+                        .contentType(APPLICATION_JSON)
+                        .header(HEADER_USER_ID, "testUserId"))
+                        .andExpect(status().isNotFound());
 
         //run the dynamic security analysis on a non-exiting parameters
         mockMvc.perform(
-                        post("/v1/networks/{networkUuid}/run?"
-                             + "&" + VARIANT_ID_HEADER + "=" + VARIANT_1_ID
-                             + "&dynamicSimulationResultUuid=" + DYNAMIC_SIMULATION_RESULT_UUID
-                             + "&parametersUuid=" + UUID.randomUUID(),
-                                NETWORK_UUID.toString())
-                                .contentType(APPLICATION_JSON)
-                                .header(HEADER_USER_ID, "testUserId"))
-                .andExpect(status().isNotFound());
+                        post("/v1/networks/{networkUuid}/run", NETWORK_UUID.toString())
+                        .param(VARIANT_ID_HEADER, VARIANT_1_ID)
+                        .param("dynamicSimulationResultUuid", DYNAMIC_SIMULATION_RESULT_UUID.toString())
+                        .param("parametersUuid", UUID.randomUUID().toString())
+                        .contentType(APPLICATION_JSON)
+                        .header(HEADER_USER_ID, "testUserId"))
+                        .andExpect(status().isNotFound());
 
     }
 
@@ -310,17 +346,16 @@ public class DynamicSecurityAnalysisControllerTest extends AbstractDynamicSecuri
         .when(dynamicSecurityAnalysisWorkerService).getCompletableFuture(any(), any(), any());
 
         MvcResult result = mockMvc.perform(
-                        post("/v1/networks/{networkUuid}/run?"
-                             + "&" + VARIANT_ID_HEADER + "=" + VARIANT_1_ID
-                             + "&dynamicSimulationResultUuid=" + DYNAMIC_SIMULATION_RESULT_UUID
-                             + "&parametersUuid=" + PARAMETERS_UUID
-                             + "&reportUuid=" + UUID.randomUUID()
-                             + "&reporterId=dsa",
-                                NETWORK_UUID.toString())
-                                .contentType(APPLICATION_JSON)
-                                .header(HEADER_USER_ID, "testUserId"))
-                .andExpect(status().isOk())
-                .andReturn();
+                        post("/v1/networks/{networkUuid}/run", NETWORK_UUID.toString())
+                        .param(VARIANT_ID_HEADER, VARIANT_1_ID)
+                        .param("dynamicSimulationResultUuid", DYNAMIC_SIMULATION_RESULT_UUID.toString())
+                        .param("parametersUuid", PARAMETERS_UUID.toString())
+                        .param("reportUuid", UUID.randomUUID().toString())
+                        .param(REPORTER_ID_HEADER, "dsa")
+                        .contentType(APPLICATION_JSON)
+                        .header(HEADER_USER_ID, "testUserId"))
+                        .andExpect(status().isOk())
+                        .andReturn();
 
         UUID runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
 
@@ -358,15 +393,14 @@ public class DynamicSecurityAnalysisControllerTest extends AbstractDynamicSecuri
     private UUID runAndCancel(CountDownLatch cancelLatch, int cancelDelay) throws Exception {
         //run the dynamic simulation on a specific variant
         MvcResult result = mockMvc.perform(
-                        post("/v1/networks/{networkUuid}/run?"
-                             + "&" + VARIANT_ID_HEADER + "=" + VARIANT_1_ID
-                             + "&dynamicSimulationResultUuid=" + DYNAMIC_SIMULATION_RESULT_UUID
-                             + "&parametersUuid=" + PARAMETERS_UUID,
-                                NETWORK_UUID.toString())
-                                .contentType(APPLICATION_JSON)
-                                .header(HEADER_USER_ID, "testUserId"))
-                .andExpect(status().isOk())
-                .andReturn();
+                        post("/v1/networks/{networkUuid}/run", NETWORK_UUID.toString())
+                        .param(VARIANT_ID_HEADER, VARIANT_1_ID)
+                        .param("dynamicSimulationResultUuid", DYNAMIC_SIMULATION_RESULT_UUID.toString())
+                        .param("parametersUuid", PARAMETERS_UUID.toString())
+                        .contentType(APPLICATION_JSON)
+                        .header(HEADER_USER_ID, "testUserId"))
+                        .andExpect(status().isOk())
+                        .andReturn();
         UUID runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
 
         assertResultStatus(runUuid, DynamicSecurityAnalysisStatus.RUNNING);

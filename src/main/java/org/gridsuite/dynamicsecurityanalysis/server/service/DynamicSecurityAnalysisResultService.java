@@ -7,7 +7,6 @@
 
 package org.gridsuite.dynamicsecurityanalysis.server.service;
 
-import jakarta.transaction.Transactional;
 import org.gridsuite.computation.service.AbstractComputationResultService;
 import org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.DynamicSecurityAnalysisStatus;
@@ -16,6 +15,7 @@ import org.gridsuite.dynamicsecurityanalysis.server.repositories.DynamicSecurity
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Objects;
@@ -43,7 +43,7 @@ public class DynamicSecurityAnalysisResultService extends AbstractComputationRes
     public void insertStatus(List<UUID> resultUuids, DynamicSecurityAnalysisStatus status) {
         Objects.requireNonNull(resultUuids);
         resultRepository.saveAll(resultUuids.stream()
-            .map(uuid -> new DynamicSecurityAnalysisResultEntity(uuid, status)).toList());
+            .map(uuid -> new DynamicSecurityAnalysisResultEntity(uuid, status, null)).toList());
     }
 
     @Transactional
@@ -65,6 +65,16 @@ public class DynamicSecurityAnalysisResultService extends AbstractComputationRes
     }
 
     @Override
+    @Transactional
+    public void saveDebugFileLocation(UUID resultUuid, String debugFilePath) {
+        resultRepository.findById(resultUuid).ifPresentOrElse(
+                (var resultEntity) -> resultRepository.updateDebugFileLocation(resultUuid, debugFilePath),
+                () -> resultRepository.save(new DynamicSecurityAnalysisResultEntity(resultUuid, DynamicSecurityAnalysisStatus.NOT_DONE, debugFilePath))
+        );
+    }
+
+    @Override
+    @Transactional
     public void delete(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
         resultRepository.deleteById(resultUuid);
@@ -77,10 +87,20 @@ public class DynamicSecurityAnalysisResultService extends AbstractComputationRes
     }
 
     @Override
+    @Transactional(readOnly = true)
     public DynamicSecurityAnalysisStatus findStatus(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
         return resultRepository.findById(resultUuid)
             .map(DynamicSecurityAnalysisResultEntity::getStatus)
             .orElse(null);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public String findDebugFileLocation(UUID resultUuid) {
+        Objects.requireNonNull(resultUuid);
+        return resultRepository.findById(resultUuid)
+                .map(DynamicSecurityAnalysisResultEntity::getDebugFileLocation)
+                .orElse(null);
     }
 }

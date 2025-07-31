@@ -29,6 +29,7 @@ import com.powsybl.security.dynamic.DynamicSecurityAnalysisParameters;
 import com.powsybl.security.dynamic.DynamicSecurityAnalysisRunParameters;
 import com.powsybl.security.results.PostContingencyResult;
 import org.apache.commons.collections4.CollectionUtils;
+import org.gridsuite.computation.s3.ComputationS3Service;
 import org.gridsuite.computation.service.*;
 import org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.DynamicSecurityAnalysisStatus;
@@ -82,10 +83,11 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
                                                 DynamicSecurityAnalysisObserver observer,
                                                 ObjectMapper objectMapper,
                                                 DynamicSecurityAnalysisResultService dynamicSecurityAnalysisResultService,
+                                                ComputationS3Service computationS3Service,
                                                 DynamicSimulationClient dynamicSimulationClient,
                                                 ActionsClient actionsClient,
                                                 ParametersService parametersService) {
-        super(networkStoreService, notificationService, reportService, dynamicSecurityAnalysisResultService, executionService, observer, objectMapper);
+        super(networkStoreService, notificationService, reportService, dynamicSecurityAnalysisResultService, computationS3Service, executionService, observer, objectMapper);
         this.dynamicSimulationClient = Objects.requireNonNull(dynamicSimulationClient);
         this.actionsClient = Objects.requireNonNull(actionsClient);
         this.parametersService = Objects.requireNonNull(parametersService);
@@ -167,6 +169,9 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
 
         // create a new dynamic security analysis parameters
         DynamicSecurityAnalysisParameters parameters = new DynamicSecurityAnalysisParameters();
+        if (runContext.getDebugDir() != null) {
+            parameters.setDebugDir(runContext.getDebugDir().toString());
+        }
         parameters.setDynamicSimulationParameters(dynamicSimulationParameters);
 
         // set start and stop times
@@ -251,31 +256,34 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
         super.clean(resultContext);
         // clean working directory
         Path workDir = resultContext.getRunContext().getWorkDir();
-        removeWorkingDirectory(workDir);
+        removeDirectory(workDir);
+    }
+
+    @Override
+    protected void processDebug(AbstractResultContext<DynamicSecurityAnalysisRunContext> resultContext) {
+        // copy all content from working directory into debug directory
+        DynamicSecurityAnalysisRunContext runContext = resultContext.getRunContext();
+        if (runContext.getWorkDir() != null && runContext.getDebugDir() != null) {
+            try {
+                FileUtil.copyDir(runContext.getWorkDir(), runContext.getDebugDir());
+            } catch (IOException e) {
+                LOGGER.error("{}: Error occurred while copying directory {} to directory {} => {}",
+                        getComputationType(), runContext.getWorkDir().toAbsolutePath(), runContext.getDebugDir().toAbsolutePath(), e.getMessage());
+            }
+        }
+        super.processDebug(resultContext);
     }
 
     private Path createWorkingDirectory() {
         Path workDir;
         Path localDir = getComputationManager().getLocalDir();
         try {
-            workDir = Files.createTempDirectory(localDir, "dynamic_security_analysis_");
+            workDir = Files.createTempDirectory(localDir, buildComputationDirPrefix());
         } catch (IOException e) {
             throw new DynamicSecurityAnalysisException(DUMP_FILE_ERROR, String.format("Error occurred while creating a working directory inside the local directory %s",
                     localDir.toAbsolutePath()));
         }
         return workDir;
-    }
-
-    private void removeWorkingDirectory(Path workDir) {
-        if (workDir != null) {
-            try {
-                FileUtil.removeDir(workDir);
-            } catch (IOException e) {
-                LOGGER.error(String.format("%s: Error occurred while cleaning working directory at %s", getComputationType(), workDir.toAbsolutePath()), e);
-            }
-        } else {
-            LOGGER.info("{}: No working directory to clean", getComputationType());
-        }
     }
 
     // --- TODO remove these reports when powsybl-dynawo implements --- //

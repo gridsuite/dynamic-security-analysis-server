@@ -150,15 +150,14 @@ public class DynamicSecurityAnalysisControllerIEEE14Test extends AbstractDynamic
 
         //run the dynamic security analysis (on a specific variant with variantId=" + VARIANT_1_ID + ")
         MvcResult result = mockMvc.perform(
-                post("/v1/networks/{networkUuid}/run?"
-                     + "&" + VARIANT_ID_HEADER + "=" + VARIANT_1_ID
-                     + "&dynamicSimulationResultUuid=" + DYNAMIC_SIMULATION_RESULT_UUID
-                     + "&parametersUuid=" + PARAMETERS_UUID,
-                    NETWORK_UUID.toString())
-                        .contentType(APPLICATION_JSON)
-                        .header(HEADER_USER_ID, "testUserId"))
-                                   .andExpect(status().isOk())
-                                   .andReturn();
+                post("/v1/networks/{networkUuid}/run", NETWORK_UUID.toString())
+                .param(VARIANT_ID_HEADER, VARIANT_1_ID)
+                .param("dynamicSimulationResultUuid", DYNAMIC_SIMULATION_RESULT_UUID.toString())
+                .param("parametersUuid", PARAMETERS_UUID.toString())
+                .contentType(APPLICATION_JSON)
+                .header(HEADER_USER_ID, "testUserId"))
+                .andExpect(status().isOk())
+                .andReturn();
 
         UUID runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
 
