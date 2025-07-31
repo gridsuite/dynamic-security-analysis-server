@@ -57,6 +57,7 @@ import java.util.function.Supplier;
 import static com.powsybl.network.store.model.NetworkStoreApi.VERSION;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.computation.s3.ComputationS3Service.METADATA_FILE_NAME;
+import static org.gridsuite.computation.service.AbstractResultContext.REPORTER_ID_HEADER;
 import static org.gridsuite.computation.service.AbstractResultContext.VARIANT_ID_HEADER;
 import static org.gridsuite.computation.service.NotificationService.*;
 import static org.gridsuite.dynamicsecurityanalysis.server.service.DynamicSecurityAnalysisService.COMPUTATION_TYPE;
@@ -349,7 +350,7 @@ public class DynamicSecurityAnalysisControllerTest extends AbstractDynamicSecuri
                         .param(VARIANT_ID_HEADER, VARIANT_1_ID)
                         .param("dynamicSimulationResultUuid", DYNAMIC_SIMULATION_RESULT_UUID.toString())
                         .param("parametersUuid", PARAMETERS_UUID.toString())
-                        .param(REPORT_UUID_HEADER, UUID.randomUUID().toString())
+                        .param("reportUuid", UUID.randomUUID().toString())
                         .param(REPORTER_ID_HEADER, "dsa")
                         .contentType(APPLICATION_JSON)
                         .header(HEADER_USER_ID, "testUserId"))
