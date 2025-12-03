@@ -9,21 +9,15 @@ package org.gridsuite.dynamicsecurityanalysis.server.service.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.NonNull;
-import org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.UUID;
 
-import static org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException.Type.DYNAMIC_SIMULATION_RESULT_GET_ERROR;
-import static org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException.Type.DYNAMIC_SIMULATION_RESULT_UUID_NOT_FOUND;
-import static org.gridsuite.dynamicsecurityanalysis.server.service.client.utils.ExceptionUtils.handleHttpError;
 import static org.gridsuite.dynamicsecurityanalysis.server.service.client.utils.UrlUtils.buildEndPointUrl;
 
 /**
@@ -52,20 +46,12 @@ public class DynamicSimulationClient extends AbstractRestClient {
                 .buildAndExpand(dynamicSimulationResultUuid, resultElementEndpoint);
 
         // call dynamic-simulation REST API
-        try {
-            String url = uriComponents.toUriString();
-            byte[] resultElement = getRestTemplate().getForObject(url, byte[].class);
-            if (logger.isDebugEnabled()) {
-                logger.debug(DYNAMIC_SIMULATION_REST_API_CALLED_SUCCESSFULLY_MESSAGE, url);
-            }
-            return resultElement;
-        } catch (HttpStatusCodeException e) {
-            if (HttpStatus.NOT_FOUND.equals(e.getStatusCode())) {
-                throw new DynamicSecurityAnalysisException(DYNAMIC_SIMULATION_RESULT_UUID_NOT_FOUND, "Dynamic simulation result not found");
-            } else {
-                throw handleHttpError(e, DYNAMIC_SIMULATION_RESULT_GET_ERROR, getObjectMapper());
-            }
+        String url = uriComponents.toUriString();
+        byte[] resultElement = getRestTemplate().getForObject(url, byte[].class);
+        if (logger.isDebugEnabled()) {
+            logger.debug(DYNAMIC_SIMULATION_REST_API_CALLED_SUCCESSFULLY_MESSAGE, url);
         }
+        return resultElement;
     }
 
     public byte[] getOutputState(UUID dynamicSimulationResultUuid) {
