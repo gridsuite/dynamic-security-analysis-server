@@ -99,7 +99,12 @@ public class ActionsClientTest extends AbstractWireMockRestClientTest {
         );
 
         List<UUID> contingencyList = List.of(CONTINGENCY_UUID);
-        catchThrowableOfType(() -> actionsClient.getContingencyList(contingencyList, NETWORK_UUID, VARIANT_1_ID), Exception.class);
+        Exception error = catchThrowableOfType(
+                () -> actionsClient.getContingencyList(contingencyList, NETWORK_UUID, VARIANT_1_ID),
+                Exception.class);
+
+        Assertions.assertThat(error.getMessage())
+                .contains(NOT_FOUND_ERROR_MESSAGE);
     }
 
     @Test
@@ -115,11 +120,11 @@ public class ActionsClientTest extends AbstractWireMockRestClientTest {
         );
 
         List<UUID> contingencyList = List.of(CONTINGENCY_UUID);
-        Exception dynamicSecurityAnalysisException = catchThrowableOfType(
+        Exception error = catchThrowableOfType(
                 () -> actionsClient.getContingencyList(contingencyList, NETWORK_UUID, VARIANT_1_ID),
                 Exception.class);
 
-        Assertions.assertThat(dynamicSecurityAnalysisException.getMessage())
+        Assertions.assertThat(error.getMessage())
                 .contains(ERROR_MESSAGE);
     }
 
