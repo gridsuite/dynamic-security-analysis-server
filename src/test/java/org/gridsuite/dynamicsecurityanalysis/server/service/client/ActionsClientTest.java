@@ -18,6 +18,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
@@ -120,7 +121,7 @@ public class ActionsClientTest extends AbstractWireMockRestClientTest {
         );
 
         List<UUID> contingencyList = List.of(CONTINGENCY_UUID);
-        HttpClientErrorException error = catchThrowableOfType(HttpClientErrorException.class,
+        HttpServerErrorException error = catchThrowableOfType(HttpServerErrorException.class,
                 () -> actionsClient.getContingencyList(contingencyList, NETWORK_UUID, VARIANT_1_ID));
 
         Assertions.assertThat(error.getMessage())
