@@ -12,7 +12,6 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.powsybl.contingency.Contingency;
-import org.apache.http.client.HttpResponseException;
 import org.assertj.core.api.Assertions;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.contingency.ContingencyInfos;
 import org.junit.jupiter.api.BeforeEach;

@@ -10,8 +10,6 @@ package org.gridsuite.dynamicsecurityanalysis.server.service.client;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
-import org.assertj.core.api.Assertions;
-import org.gridsuite.dynamicsecurityanalysis.server.error.DynamicSecurityAnalysisException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
