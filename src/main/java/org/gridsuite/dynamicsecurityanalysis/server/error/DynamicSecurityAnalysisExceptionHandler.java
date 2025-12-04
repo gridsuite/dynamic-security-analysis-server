@@ -40,7 +40,7 @@ public class DynamicSecurityAnalysisExceptionHandler extends AbstractBusinessExc
     }
 
     @ExceptionHandler(DynamicSecurityAnalysisException.class)
-    public ResponseEntity<PowsyblWsProblemDetail> handleComputationException(DynamicSecurityAnalysisException exception, HttpServletRequest request) {
+    public ResponseEntity<PowsyblWsProblemDetail> handleDynamicSecurityAnalysisException(DynamicSecurityAnalysisException exception, HttpServletRequest request) {
         return super.handleDomainException(exception, request);
     }
 

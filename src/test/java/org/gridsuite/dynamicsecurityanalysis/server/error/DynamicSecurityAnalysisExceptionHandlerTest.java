@@ -41,7 +41,7 @@ class DynamicSecurityAnalysisExceptionHandlerTest {
         );
 
         ResponseEntity<PowsyblWsProblemDetail> response =
-                exceptionHandler.handleComputationException(exception, request);
+                exceptionHandler.handleDynamicSecurityAnalysisException(exception, request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(response.getBody()).isNotNull();
@@ -60,7 +60,7 @@ class DynamicSecurityAnalysisExceptionHandlerTest {
         );
 
         ResponseEntity<PowsyblWsProblemDetail> response =
-                exceptionHandler.handleComputationException(exception, request);
+                exceptionHandler.handleDynamicSecurityAnalysisException(exception, request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(response.getBody()).isNotNull();
@@ -78,7 +78,7 @@ class DynamicSecurityAnalysisExceptionHandlerTest {
         );
 
         ResponseEntity<PowsyblWsProblemDetail> response =
-                exceptionHandler.handleComputationException(exception, request);
+                exceptionHandler.handleDynamicSecurityAnalysisException(exception, request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
         assertThat(response.getBody()).isNotNull();
