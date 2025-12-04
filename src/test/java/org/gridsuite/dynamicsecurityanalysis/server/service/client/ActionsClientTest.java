@@ -12,11 +12,13 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.powsybl.contingency.Contingency;
+import org.apache.http.client.HttpResponseException;
 import org.assertj.core.api.Assertions;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.contingency.ContingencyInfos;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
@@ -99,9 +101,8 @@ public class ActionsClientTest extends AbstractWireMockRestClientTest {
         );
 
         List<UUID> contingencyList = List.of(CONTINGENCY_UUID);
-        Exception error = catchThrowableOfType(
-                () -> actionsClient.getContingencyList(contingencyList, NETWORK_UUID, VARIANT_1_ID),
-                Exception.class);
+        HttpClientErrorException error = catchThrowableOfType(HttpClientErrorException.class,
+                () -> actionsClient.getContingencyList(contingencyList, NETWORK_UUID, VARIANT_1_ID));
 
         Assertions.assertThat(error.getMessage())
                 .contains(NOT_FOUND_ERROR_MESSAGE);
@@ -120,9 +121,8 @@ public class ActionsClientTest extends AbstractWireMockRestClientTest {
         );
 
         List<UUID> contingencyList = List.of(CONTINGENCY_UUID);
-        Exception error = catchThrowableOfType(
-                () -> actionsClient.getContingencyList(contingencyList, NETWORK_UUID, VARIANT_1_ID),
-                Exception.class);
+        HttpClientErrorException error = catchThrowableOfType(HttpClientErrorException.class,
+                () -> actionsClient.getContingencyList(contingencyList, NETWORK_UUID, VARIANT_1_ID));
 
         Assertions.assertThat(error.getMessage())
                 .contains(ERROR_MESSAGE);

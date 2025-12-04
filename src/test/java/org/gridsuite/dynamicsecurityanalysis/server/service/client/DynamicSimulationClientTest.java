@@ -10,10 +10,14 @@ package org.gridsuite.dynamicsecurityanalysis.server.service.client;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
+import org.assertj.core.api.Assertions;
+import org.gridsuite.dynamicsecurityanalysis.server.error.DynamicSecurityAnalysisException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.UUID;
@@ -95,14 +99,19 @@ public class DynamicSimulationClientTest extends AbstractWireMockRestClientTest 
         // --- test not found --- //
         setupWireMockServerResponseNotFound(OUTPUT_STATE);
 
+        HttpClientErrorException httpClientErrorException = catchThrowableOfType(HttpClientErrorException.class,
+                () -> dynamicSimulationClient.getOutputState(DYNAMIC_SIMULATION_RESULT_UUID));
+
+        assertThat(httpClientErrorException.getMessage())
+                .contains(NOT_FOUND_ERROR_MESSAGE);
+
         // --- test error exception --- //
         setupWireMockServerResponseGivenException(OUTPUT_STATE);
 
-        Exception dynamicSecurityAnalysisErrorException = catchThrowableOfType(
-                () -> dynamicSimulationClient.getOutputState(DYNAMIC_SIMULATION_RESULT_UUID),
-                Exception.class);
+        HttpServerErrorException httpServerErrorException = catchThrowableOfType(HttpServerErrorException.class,
+                () -> dynamicSimulationClient.getOutputState(DYNAMIC_SIMULATION_RESULT_UUID));
 
-        assertThat(dynamicSecurityAnalysisErrorException.getMessage())
+        assertThat(httpServerErrorException.getMessage())
                 .contains(ERROR_MESSAGE);
     }
 
@@ -118,18 +127,16 @@ public class DynamicSimulationClientTest extends AbstractWireMockRestClientTest 
         // --- test not found --- //
         setupWireMockServerResponseNotFound(DYNAMIC_MODEL);
 
-        catchThrowableOfType(
-                () -> dynamicSimulationClient.getDynamicModel(DYNAMIC_SIMULATION_RESULT_UUID),
-                Exception.class);
+        HttpClientErrorException httpClientErrorException = catchThrowableOfType(HttpClientErrorException.class,
+                () -> dynamicSimulationClient.getDynamicModel(DYNAMIC_SIMULATION_RESULT_UUID));
+        assertThat(httpClientErrorException.getMessage()).contains(NOT_FOUND_ERROR_MESSAGE);
 
         // --- test error exception --- //
         setupWireMockServerResponseGivenException(DYNAMIC_MODEL);
 
-        Exception dynamicSecurityAnalysisErrorException = catchThrowableOfType(
-                () -> dynamicSimulationClient.getDynamicModel(DYNAMIC_SIMULATION_RESULT_UUID),
-                Exception.class);
-        assertThat(dynamicSecurityAnalysisErrorException.getMessage())
-                .contains(ERROR_MESSAGE);
+        HttpServerErrorException serverErrorException = catchThrowableOfType(HttpServerErrorException.class,
+                () -> dynamicSimulationClient.getDynamicModel(DYNAMIC_SIMULATION_RESULT_UUID));
+        assertThat(serverErrorException.getMessage()).contains(ERROR_MESSAGE);
     }
 
     @Test
@@ -143,18 +150,17 @@ public class DynamicSimulationClientTest extends AbstractWireMockRestClientTest 
 
         // --- test not found --- //
         setupWireMockServerResponseNotFound(PARAMETERS);
+        HttpClientErrorException httpClientErrorException = catchThrowableOfType(HttpClientErrorException.class,
+                () -> dynamicSimulationClient.getDynamicSimulationParameters(DYNAMIC_SIMULATION_RESULT_UUID));
 
-        Exception dynamicSecurityAnalysisException = catchThrowableOfType(
-                () -> dynamicSimulationClient.getDynamicSimulationParameters(DYNAMIC_SIMULATION_RESULT_UUID),
-                Exception.class);
+        assertThat(httpClientErrorException.getMessage())
+                .contains(NOT_FOUND_ERROR_MESSAGE);
         // --- test error exception --- //
         setupWireMockServerResponseGivenException(PARAMETERS);
+        HttpServerErrorException httpServerErrorException = catchThrowableOfType(HttpServerErrorException.class,
+                () -> dynamicSimulationClient.getDynamicSimulationParameters(DYNAMIC_SIMULATION_RESULT_UUID));
 
-        Exception dynamicSecurityAnalysisErrorException = catchThrowableOfType(
-                () -> dynamicSimulationClient.getDynamicSimulationParameters(DYNAMIC_SIMULATION_RESULT_UUID),
-                Exception.class);
-
-        assertThat(dynamicSecurityAnalysisErrorException.getMessage())
+        assertThat(httpServerErrorException.getMessage())
                 .contains(ERROR_MESSAGE);
     }
 }
