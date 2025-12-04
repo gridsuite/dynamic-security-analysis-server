@@ -14,7 +14,7 @@ import com.powsybl.ws.commons.error.BusinessErrorCode;
 public enum DynamicSecurityAnalysisBusinessErrorCode implements BusinessErrorCode {
     PROVIDER_NOT_FOUND("dynamicSecurityAnalysis.providerNotFound"),
     CONTINGENCIES_NOT_FOUND("dynamicSecurityAnalysis.contingenciesNotFound"),
-    CONTINGENCY_LIST_EMPTY("dynamicSecurityAnalysis.contingenciesListEmpty");
+    CONTINGENCY_LIST_EMPTY("dynamicSecurityAnalysis.contingencyListEmpty");
 
     private final String code;
 

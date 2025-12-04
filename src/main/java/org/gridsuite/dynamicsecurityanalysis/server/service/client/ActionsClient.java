@@ -60,9 +60,7 @@ public class ActionsClient extends AbstractRestClient {
         ResponseEntity<List<ContingencyInfos>> responseEntity = getRestTemplate()
                 .exchange(url, HttpMethod.GET, null, new ParameterizedTypeReference<>() {
                 });
-        if (logger.isDebugEnabled()) {
-            logger.debug("Actions REST API called successfully {}", url);
-        }
+        logger.debug("Actions REST API called successfully {}", url);
         return responseEntity.getBody();
     }
 }

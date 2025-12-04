@@ -48,9 +48,7 @@ public class DynamicSimulationClient extends AbstractRestClient {
         // call dynamic-simulation REST API
         String url = uriComponents.toUriString();
         byte[] resultElement = getRestTemplate().getForObject(url, byte[].class);
-        if (logger.isDebugEnabled()) {
-            logger.debug(DYNAMIC_SIMULATION_REST_API_CALLED_SUCCESSFULLY_MESSAGE, url);
-        }
+        logger.debug(DYNAMIC_SIMULATION_REST_API_CALLED_SUCCESSFULLY_MESSAGE, url);
         return resultElement;
     }
 
