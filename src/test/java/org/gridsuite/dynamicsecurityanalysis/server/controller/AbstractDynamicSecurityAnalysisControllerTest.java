@@ -25,11 +25,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
 import org.springframework.cloud.stream.binder.test.TestChannelBinderConfiguration;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -64,25 +64,25 @@ public abstract class AbstractDynamicSecurityAnalysisControllerTest extends Abst
     @Autowired
     ObjectMapper objectMapper;
 
-    @MockBean
+    @MockitoBean
     protected ReportService reportService;
 
-    @MockBean
+    @MockitoBean
     protected DynamicSimulationClient dynamicSimulationClient;
 
-    @MockBean
+    @MockitoBean
     protected ActionsClient actionsClient;
 
-    @MockBean
+    @MockitoBean
     protected NetworkStoreService networkStoreClient;
 
-    @MockBean
+    @MockitoBean
     protected DynamicSecurityAnalysisParametersRepository dynamicSecurityAnalysisParametersRepository;
 
-    @SpyBean
+    @MockitoSpyBean
     protected ParametersService parametersService;
 
-    @SpyBean
+    @MockitoSpyBean
     protected DynamicSecurityAnalysisWorkerService dynamicSecurityAnalysisWorkerService;
 
     @BeforeEach
