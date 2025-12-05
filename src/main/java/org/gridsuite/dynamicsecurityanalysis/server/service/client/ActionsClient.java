@@ -9,16 +9,14 @@ package org.gridsuite.dynamicsecurityanalysis.server.service.client;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.NonNull;
 import org.apache.commons.collections4.CollectionUtils;
-import org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.contingency.ContingencyInfos;
+import org.gridsuite.dynamicsecurityanalysis.server.error.DynamicSecurityAnalysisException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -27,8 +25,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException.Type.*;
-import static org.gridsuite.dynamicsecurityanalysis.server.service.client.utils.ExceptionUtils.handleHttpError;
+import static org.gridsuite.dynamicsecurityanalysis.server.error.DynamicSecurityAnalysisBusinessErrorCode.CONTINGENCY_LIST_EMPTY;
 import static org.gridsuite.dynamicsecurityanalysis.server.service.client.utils.UrlUtils.buildEndPointUrl;
 
 /**
@@ -59,20 +56,11 @@ public class ActionsClient extends AbstractRestClient {
                 .queryParam("ids", ids)
                 .build();
 
-        try {
-            String url = uriComponents.toUriString();
-            ResponseEntity<List<ContingencyInfos>> responseEntity = getRestTemplate()
-                .exchange(url, HttpMethod.GET, null, new ParameterizedTypeReference<>() { });
-            if (logger.isDebugEnabled()) {
-                logger.debug("Actions REST API called successfully {}", url);
-            }
-            return responseEntity.getBody();
-        } catch (HttpStatusCodeException e) {
-            if (HttpStatus.NOT_FOUND.equals(e.getStatusCode())) {
-                throw new DynamicSecurityAnalysisException(CONTINGENCIES_NOT_FOUND, "Contingencies not found");
-            } else {
-                throw handleHttpError(e, CONTINGENCIES_GET_ERROR, getObjectMapper());
-            }
-        }
+        String url = uriComponents.toUriString();
+        ResponseEntity<List<ContingencyInfos>> responseEntity = getRestTemplate()
+                .exchange(url, HttpMethod.GET, null, new ParameterizedTypeReference<>() {
+                });
+        logger.debug("Actions REST API called successfully {}", url);
+        return responseEntity.getBody();
     }
 }

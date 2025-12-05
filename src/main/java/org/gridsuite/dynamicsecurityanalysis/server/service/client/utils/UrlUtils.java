@@ -7,13 +7,11 @@
 
 package org.gridsuite.dynamicsecurityanalysis.server.service.client.utils;
 
+import com.powsybl.commons.exceptions.UncheckedUriSyntaxException;
 import org.apache.logging.log4j.util.Strings;
-import org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-
-import static org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException.Type.URI_SYNTAX;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -47,7 +45,7 @@ public final class UrlUtils {
             // normalize before return
             return new URI(url).normalize().toString();
         } catch (URISyntaxException e) {
-            throw new DynamicSecurityAnalysisException(URI_SYNTAX, e.getMessage());
+            throw new UncheckedUriSyntaxException(e);
         }
     }
 }

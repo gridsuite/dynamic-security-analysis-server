@@ -7,8 +7,8 @@
 
 package org.gridsuite.dynamicsecurityanalysis.server.service;
 
+import org.gridsuite.computation.error.ComputationException;
 import org.gridsuite.computation.service.AbstractComputationResultService;
-import org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.DynamicSecurityAnalysisStatus;
 import org.gridsuite.dynamicsecurityanalysis.server.entities.DynamicSecurityAnalysisResultEntity;
 import org.gridsuite.dynamicsecurityanalysis.server.repositories.DynamicSecurityAnalysisResultRepository;
@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-import static org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException.Type.RESULT_UUID_NOT_FOUND;
+import static org.gridsuite.computation.error.ComputationBusinessErrorCode.RESULT_NOT_FOUND;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -60,7 +60,7 @@ public class DynamicSecurityAnalysisResultService extends AbstractComputationRes
     public void updateResult(UUID resultUuid, DynamicSecurityAnalysisStatus status) {
         LOGGER.debug("Update dynamic simulation [resultUuid={}, status={}", resultUuid, status);
         DynamicSecurityAnalysisResultEntity resultEntity = resultRepository.findById(resultUuid)
-               .orElseThrow(() -> new DynamicSecurityAnalysisException(RESULT_UUID_NOT_FOUND, MSG_RESULT_UUID_NOT_FOUND + resultUuid));
+               .orElseThrow(() -> new ComputationException(RESULT_NOT_FOUND, MSG_RESULT_UUID_NOT_FOUND + resultUuid));
         resultEntity.setStatus(status);
     }
 

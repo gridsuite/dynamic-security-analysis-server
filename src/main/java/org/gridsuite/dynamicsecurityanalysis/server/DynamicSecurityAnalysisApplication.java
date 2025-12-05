@@ -6,6 +6,7 @@
  */
 package org.gridsuite.dynamicsecurityanalysis.server;
 
+import org.gridsuite.computation.error.ComputationExceptionHandler;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -13,7 +14,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 @SuppressWarnings("checkstyle:HideUtilityClassConstructor")
-@SpringBootApplication
+@SpringBootApplication(scanBasePackageClasses = { DynamicSecurityAnalysisApplication.class, ComputationExceptionHandler.class})
 public class DynamicSecurityAnalysisApplication {
 
     public static void main(String[] args) {
