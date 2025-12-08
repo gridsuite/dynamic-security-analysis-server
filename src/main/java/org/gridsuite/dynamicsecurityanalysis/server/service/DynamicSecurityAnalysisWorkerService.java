@@ -31,10 +31,10 @@ import com.powsybl.security.results.PostContingencyResult;
 import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.computation.s3.ComputationS3Service;
 import org.gridsuite.computation.service.*;
-import org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.DynamicSecurityAnalysisStatus;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.contingency.ContingencyInfos;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.parameters.DynamicSecurityAnalysisParametersInfos;
+import org.gridsuite.dynamicsecurityanalysis.server.error.DynamicSecurityAnalysisException;
 import org.gridsuite.dynamicsecurityanalysis.server.service.client.ActionsClient;
 import org.gridsuite.dynamicsecurityanalysis.server.service.client.DynamicSimulationClient;
 import org.gridsuite.dynamicsecurityanalysis.server.service.contexts.DynamicSecurityAnalysisResultContext;
@@ -47,6 +47,7 @@ import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -58,8 +59,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
-import static org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException.Type.CONTINGENCIES_NOT_FOUND;
-import static org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException.Type.DUMP_FILE_ERROR;
+import static org.gridsuite.dynamicsecurityanalysis.server.error.DynamicSecurityAnalysisBusinessErrorCode.CONTINGENCIES_NOT_FOUND;
 import static org.gridsuite.dynamicsecurityanalysis.server.service.DynamicSecurityAnalysisService.COMPUTATION_TYPE;
 import static org.gridsuite.dynamicsecurityanalysis.server.utils.Utils.getReportNode;
 
@@ -280,8 +280,8 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
         try {
             workDir = Files.createTempDirectory(localDir, buildComputationDirPrefix());
         } catch (IOException e) {
-            throw new DynamicSecurityAnalysisException(DUMP_FILE_ERROR, String.format("Error occurred while creating a working directory inside the local directory %s",
-                    localDir.toAbsolutePath()));
+            throw new UncheckedIOException(String.format("Error occurred while creating a working directory inside the local directory %s",
+                    localDir.toAbsolutePath()), e);
         }
         return workDir;
     }

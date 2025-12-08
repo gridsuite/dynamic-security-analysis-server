@@ -28,9 +28,9 @@ import org.gridsuite.dynamicsecurityanalysis.server.service.contexts.DynamicSecu
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
 import org.springframework.messaging.Message;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MvcResult;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -96,10 +96,10 @@ public class DynamicSecurityAnalysisControllerTest extends AbstractDynamicSecuri
     @Autowired
     private OutputDestination output;
 
-    @SpyBean
+    @MockitoSpyBean
     private NotificationService notificationService;
 
-    @SpyBean
+    @MockitoSpyBean
     private S3Client s3Client;
 
     @Override
