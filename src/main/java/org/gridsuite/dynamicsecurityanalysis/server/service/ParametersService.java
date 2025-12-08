@@ -16,7 +16,8 @@ import com.powsybl.dynawo.suppliers.dynamicmodels.DynamicModelConfig;
 import com.powsybl.security.dynamic.DynamicSecurityAnalysisParameters;
 import jakarta.transaction.Transactional;
 import org.gridsuite.computation.dto.ReportInfos;
-import org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException;
+import org.gridsuite.computation.error.ComputationException;
+import org.gridsuite.dynamicsecurityanalysis.server.error.DynamicSecurityAnalysisException;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.parameters.DynamicSecurityAnalysisParametersInfos;
 import org.gridsuite.dynamicsecurityanalysis.server.entities.parameters.DynamicSecurityAnalysisParametersEntity;
 import org.gridsuite.dynamicsecurityanalysis.server.repositories.DynamicSecurityAnalysisParametersRepository;
@@ -27,13 +28,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisException.Type.*;
+import static org.gridsuite.computation.error.ComputationBusinessErrorCode.PARAMETERS_NOT_FOUND;
+import static org.gridsuite.dynamicsecurityanalysis.server.error.DynamicSecurityAnalysisBusinessErrorCode.PROVIDER_NOT_FOUND;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -105,8 +108,8 @@ public class ParametersService {
             // UNZIP output state
             Utils.unzip(zippedOutputState, dumpFile);
         } catch (IOException e) {
-            throw new DynamicSecurityAnalysisException(DUMP_FILE_ERROR, String.format("Error occurred while unzip the output state into a dump file in the directory %s",
-                    dumpDir.toAbsolutePath()));
+            throw new UncheckedIOException(String.format("Error occurred while unzip the output state into a dump file in the directory %s",
+                    dumpDir.toAbsolutePath()), e);
         }
         return dumpFile;
     }
@@ -118,7 +121,7 @@ public class ParametersService {
             Utils.postDeserializerDynamicModel(dynamicModel);
             return dynamicModel;
         } catch (IOException e) {
-            throw new DynamicSecurityAnalysisException(DYNAMIC_MODEL_ERROR, "Error occurred while unzip the dynamic model");
+            throw new UncheckedIOException("Error occurred while unzip the dynamic model", e);
         }
     }
 
@@ -127,7 +130,7 @@ public class ParametersService {
             // unzip dynamic model
             return Utils.unzip(dynamicSimulationZippedParameters, objectMapper, DynamicSimulationParameters.class);
         } catch (IOException e) {
-            throw new DynamicSecurityAnalysisException(DYNAMIC_SIMULATION_PARAMETERS_ERROR, "Error occurred while unzip the dynamic simulation parameters");
+            throw new UncheckedIOException("Error occurred while unzip the dynamic simulation parameters", e);
         }
     }
 
@@ -135,7 +138,7 @@ public class ParametersService {
 
     public DynamicSecurityAnalysisParametersInfos getParameters(UUID parametersUuid) {
         DynamicSecurityAnalysisParametersEntity entity = dynamicSecurityAnalysisParametersRepository.findById(parametersUuid)
-                .orElseThrow(() -> new DynamicSecurityAnalysisException(PARAMETERS_UUID_NOT_FOUND, MSG_PARAMETERS_UUID_NOT_FOUND + parametersUuid));
+                .orElseThrow(() -> new ComputationException(PARAMETERS_NOT_FOUND, MSG_PARAMETERS_UUID_NOT_FOUND + parametersUuid));
 
         return new DynamicSecurityAnalysisParametersInfos(parametersUuid, entity.getProvider(), entity.getScenarioDuration(), entity.getContingenciesStartTime(), entity.getContingencyListIds());
     }
@@ -162,7 +165,7 @@ public class ParametersService {
     @Transactional
     public UUID duplicateParameters(UUID sourceParametersUuid) {
         DynamicSecurityAnalysisParametersEntity entity = dynamicSecurityAnalysisParametersRepository.findById(sourceParametersUuid)
-                .orElseThrow(() -> new DynamicSecurityAnalysisException(PARAMETERS_UUID_NOT_FOUND, MSG_PARAMETERS_UUID_NOT_FOUND + sourceParametersUuid));
+                .orElseThrow(() -> new ComputationException(PARAMETERS_NOT_FOUND, MSG_PARAMETERS_UUID_NOT_FOUND + sourceParametersUuid));
         DynamicSecurityAnalysisParametersInfos duplicatedParametersInfos = entity.toDto();
         duplicatedParametersInfos.setId(null);
         return createParameters(duplicatedParametersInfos);
@@ -177,7 +180,7 @@ public class ParametersService {
     @Transactional
     public void updateParameters(UUID parametersUuid, DynamicSecurityAnalysisParametersInfos parametersInfos) {
         DynamicSecurityAnalysisParametersEntity entity = dynamicSecurityAnalysisParametersRepository.findById(parametersUuid)
-                .orElseThrow(() -> new DynamicSecurityAnalysisException(PARAMETERS_UUID_NOT_FOUND, MSG_PARAMETERS_UUID_NOT_FOUND + parametersUuid));
+                .orElseThrow(() -> new ComputationException(PARAMETERS_NOT_FOUND, MSG_PARAMETERS_UUID_NOT_FOUND + parametersUuid));
         if (parametersInfos == null) {
             //if the parameters is null it means it's a reset to defaultValues, but we need to keep the provider because it's updated separately
             entity.update(getDefaultParametersValues(Optional.ofNullable(entity.getProvider()).orElse(defaultProvider)));
@@ -193,7 +196,7 @@ public class ParametersService {
     @Transactional
     public void updateProvider(UUID parametersUuid, String provider) {
         DynamicSecurityAnalysisParametersEntity entity = dynamicSecurityAnalysisParametersRepository.findById(parametersUuid)
-                .orElseThrow(() -> new DynamicSecurityAnalysisException(PARAMETERS_UUID_NOT_FOUND, MSG_PARAMETERS_UUID_NOT_FOUND + parametersUuid));
+                .orElseThrow(() -> new ComputationException(PARAMETERS_NOT_FOUND, MSG_PARAMETERS_UUID_NOT_FOUND + parametersUuid));
         entity.setProvider(provider != null ? provider : defaultProvider);
     }
 
