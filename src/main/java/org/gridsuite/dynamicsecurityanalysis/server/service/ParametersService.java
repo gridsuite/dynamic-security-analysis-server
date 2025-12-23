@@ -8,6 +8,7 @@ package org.gridsuite.dynamicsecurityanalysis.server.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.powsybl.contingency.Contingency;
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
 import com.powsybl.dynamicsimulation.DynamicSimulationProvider;
 import com.powsybl.dynawo.DumpFileParameters;
@@ -15,12 +16,16 @@ import com.powsybl.dynawo.DynawoSimulationParameters;
 import com.powsybl.dynawo.suppliers.dynamicmodels.DynamicModelConfig;
 import com.powsybl.security.dynamic.DynamicSecurityAnalysisParameters;
 import jakarta.transaction.Transactional;
+import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.computation.dto.ReportInfos;
 import org.gridsuite.computation.error.ComputationException;
-import org.gridsuite.dynamicsecurityanalysis.server.error.DynamicSecurityAnalysisException;
+import org.gridsuite.dynamicsecurityanalysis.server.dto.contingency.ContingencyInfos;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.parameters.DynamicSecurityAnalysisParametersInfos;
+import org.gridsuite.dynamicsecurityanalysis.server.dto.parameters.DynamicSecurityAnalysisParametersValues;
 import org.gridsuite.dynamicsecurityanalysis.server.entities.parameters.DynamicSecurityAnalysisParametersEntity;
+import org.gridsuite.dynamicsecurityanalysis.server.error.DynamicSecurityAnalysisException;
 import org.gridsuite.dynamicsecurityanalysis.server.repositories.DynamicSecurityAnalysisParametersRepository;
+import org.gridsuite.dynamicsecurityanalysis.server.service.client.ActionsClient;
 import org.gridsuite.dynamicsecurityanalysis.server.service.contexts.DynamicSecurityAnalysisRunContext;
 import org.gridsuite.dynamicsecurityanalysis.server.utils.Utils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +41,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.gridsuite.computation.error.ComputationBusinessErrorCode.PARAMETERS_NOT_FOUND;
+import static org.gridsuite.dynamicsecurityanalysis.server.error.DynamicSecurityAnalysisBusinessErrorCode.CONTINGENCIES_NOT_FOUND;
 import static org.gridsuite.dynamicsecurityanalysis.server.error.DynamicSecurityAnalysisBusinessErrorCode.PROVIDER_NOT_FOUND;
 
 /**
@@ -49,11 +55,15 @@ public class ParametersService {
     private final String defaultProvider;
 
     private final DynamicSecurityAnalysisParametersRepository dynamicSecurityAnalysisParametersRepository;
+    private final ActionsClient actionsClient;
 
     @Autowired
-    public ParametersService(@Value("${dynamic-security-analysis.default-provider}") String defaultProvider, DynamicSecurityAnalysisParametersRepository dynamicSecurityAnalysisParametersRepository) {
+    public ParametersService(@Value("${dynamic-security-analysis.default-provider}") String defaultProvider,
+                             DynamicSecurityAnalysisParametersRepository dynamicSecurityAnalysisParametersRepository,
+                             ActionsClient actionsClient) {
         this.defaultProvider = defaultProvider;
         this.dynamicSecurityAnalysisParametersRepository = dynamicSecurityAnalysisParametersRepository;
+        this.actionsClient = actionsClient;
     }
 
     public DynamicSecurityAnalysisRunContext createRunContext(UUID networkUuid, String variantId, String receiver,
@@ -198,6 +208,24 @@ public class ParametersService {
         DynamicSecurityAnalysisParametersEntity entity = dynamicSecurityAnalysisParametersRepository.findById(parametersUuid)
                 .orElseThrow(() -> new ComputationException(PARAMETERS_NOT_FOUND, MSG_PARAMETERS_UUID_NOT_FOUND + parametersUuid));
         entity.setProvider(provider != null ? provider : defaultProvider);
+    }
+
+    // --- Dynamic security analysis evaluated parameters related methods --- //
+
+    public List<Contingency> getContingencies(List<UUID> contingencyListIds, UUID networkUuid, String variantId) {
+        List<ContingencyInfos> contingencyList = actionsClient.getContingencyList(contingencyListIds, networkUuid, variantId);
+        List<Contingency> contingencies = contingencyList.stream().map(ContingencyInfos::getContingency).filter(Objects::nonNull).toList();
+        if (CollectionUtils.isEmpty(contingencies)) {
+            throw new DynamicSecurityAnalysisException(CONTINGENCIES_NOT_FOUND, "No contingencies");
+        }
+        return contingencies;
+    }
+
+    public DynamicSecurityAnalysisParametersValues getParametersValues(UUID parametersUuid, UUID networkUuid, String variantId) {
+        DynamicSecurityAnalysisParametersEntity entity = dynamicSecurityAnalysisParametersRepository.findById(parametersUuid)
+                .orElseThrow(() -> new ComputationException(PARAMETERS_NOT_FOUND, MSG_PARAMETERS_UUID_NOT_FOUND + parametersUuid));
+        List<Contingency> contingencyList = getContingencies(entity.getContingencyListIds(), networkUuid, variantId);
+        return new DynamicSecurityAnalysisParametersValues(entity.getContingenciesStartTime(), contingencyList);
     }
 
 }

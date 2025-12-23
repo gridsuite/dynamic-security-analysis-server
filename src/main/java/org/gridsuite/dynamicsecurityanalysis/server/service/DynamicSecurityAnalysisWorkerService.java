@@ -9,7 +9,6 @@ package org.gridsuite.dynamicsecurityanalysis.server.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.io.FileUtil;
 import com.powsybl.commons.report.ReportNode;
-import com.powsybl.commons.report.TypedValue;
 import com.powsybl.computation.ComputationManager;
 import com.powsybl.contingency.ContingenciesProvider;
 import com.powsybl.contingency.Contingency;
@@ -20,23 +19,17 @@ import com.powsybl.dynawo.suppliers.dynamicmodels.DynawoModelsSupplier;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
-import com.powsybl.security.LimitViolation;
-import com.powsybl.security.LimitViolationsResult;
 import com.powsybl.security.PostContingencyComputationStatus;
 import com.powsybl.security.SecurityAnalysisReport;
 import com.powsybl.security.dynamic.DynamicSecurityAnalysis;
 import com.powsybl.security.dynamic.DynamicSecurityAnalysisParameters;
 import com.powsybl.security.dynamic.DynamicSecurityAnalysisRunParameters;
-import com.powsybl.security.results.PostContingencyResult;
 import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.computation.s3.ComputationS3Service;
 import org.gridsuite.computation.service.*;
 import org.gridsuite.dynamicsecurityanalysis.server.PropertyServerNameProvider;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.DynamicSecurityAnalysisStatus;
-import org.gridsuite.dynamicsecurityanalysis.server.dto.contingency.ContingencyInfos;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.parameters.DynamicSecurityAnalysisParametersInfos;
-import org.gridsuite.dynamicsecurityanalysis.server.error.DynamicSecurityAnalysisException;
-import org.gridsuite.dynamicsecurityanalysis.server.service.client.ActionsClient;
 import org.gridsuite.dynamicsecurityanalysis.server.service.client.DynamicSimulationClient;
 import org.gridsuite.dynamicsecurityanalysis.server.service.contexts.DynamicSecurityAnalysisResultContext;
 import org.gridsuite.dynamicsecurityanalysis.server.service.contexts.DynamicSecurityAnalysisRunContext;
@@ -59,10 +52,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
-import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
-import static org.gridsuite.dynamicsecurityanalysis.server.error.DynamicSecurityAnalysisBusinessErrorCode.CONTINGENCIES_NOT_FOUND;
 import static org.gridsuite.dynamicsecurityanalysis.server.service.DynamicSecurityAnalysisService.COMPUTATION_TYPE;
-import static org.gridsuite.dynamicsecurityanalysis.server.utils.Utils.getReportNode;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -74,7 +64,6 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
     private static final Logger LOGGER = LoggerFactory.getLogger(DynamicSecurityAnalysisWorkerService.class);
 
     private final DynamicSimulationClient dynamicSimulationClient;
-    private final ActionsClient actionsClient;
     private final ParametersService parametersService;
 
     public DynamicSecurityAnalysisWorkerService(NetworkStoreService networkStoreService,
@@ -86,12 +75,10 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
                                                 DynamicSecurityAnalysisResultService dynamicSecurityAnalysisResultService,
                                                 ComputationS3Service computationS3Service,
                                                 DynamicSimulationClient dynamicSimulationClient,
-                                                ActionsClient actionsClient,
                                                 ParametersService parametersService,
                                                 PropertyServerNameProvider propertyServerNameProvider) {
         super(networkStoreService, notificationService, reportService, dynamicSecurityAnalysisResultService, computationS3Service, executionService, observer, objectMapper, propertyServerNameProvider);
         this.dynamicSimulationClient = Objects.requireNonNull(dynamicSimulationClient);
-        this.actionsClient = Objects.requireNonNull(actionsClient);
         this.parametersService = Objects.requireNonNull(parametersService);
     }
 
@@ -128,33 +115,14 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
         return COMPUTATION_TYPE;
     }
 
-    /**
-     * TODO : open to public for mocking test with enrich report, to revert to protected when powsybl-dynawo implements
-     */
-    @Override
-    public void postRun(DynamicSecurityAnalysisRunContext runContext, AtomicReference<ReportNode> rootReportNode, SecurityAnalysisReport securityAnalysisReport) {
-        // TODO remove these reports when powsybl-dynawo implements
-        // enrich infos for contingencies timeline report
-        if (runContext.getReportInfos().reportUuid() != null) {
-            ReportNode dsaReportNode = getReportNode(runContext.getReportNode(), "dsa", null);
-            if (dsaReportNode != null) {
-                enrichContingenciesTimelineReport(securityAnalysisReport, dsaReportNode);
-            }
-        }
-
-        super.postRun(runContext, rootReportNode, securityAnalysisReport);
-    }
-
     // open the visibility from protected to public to mock in a test where the stop arrives early
     @Override
     public void preRun(DynamicSecurityAnalysisRunContext runContext) {
         super.preRun(runContext);
 
-        // get contingencies from actions server
-        List<ContingencyInfos> contingencyList = actionsClient.getContingencyList(runContext.getParameters().getContingencyListIds(), runContext.getNetworkUuid(), runContext.getVariantId());
-        if (CollectionUtils.isEmpty(contingencyList)) {
-            throw new DynamicSecurityAnalysisException(CONTINGENCIES_NOT_FOUND, "No contingencies");
-        }
+        // get contingencies
+        List<Contingency> contingencyList = parametersService.getContingencies(runContext.getParameters().getContingencyListIds(),
+                runContext.getNetworkUuid(), runContext.getVariantId());
 
         // get dump file from dynamic simulation server
         byte[] dynamicSimulationZippedOutputState = dynamicSimulationClient.getOutputState(runContext.getDynamicSimulationResultUuid());
@@ -202,9 +170,7 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
 
         DynamicModelsSupplier dynamicModelsSupplier = new DynawoModelsSupplier(runContext.getDynamicModelContent());
 
-        List<Contingency> contingencies = runContext.getContingencies()
-                .stream().map(ContingencyInfos::getContingency)
-                .filter(Objects::nonNull).toList();
+        List<Contingency> contingencies = runContext.getContingencies();
         ContingenciesProvider contingenciesProvider = network -> contingencies;
 
         DynamicSecurityAnalysisParameters parameters = runContext.getDynamicSecurityAnalysisParameters();
@@ -286,36 +252,6 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
                     localDir.toAbsolutePath()), e);
         }
         return workDir;
-    }
-
-    // --- TODO remove these reports when powsybl-dynawo implements --- //
-    private static void enrichContingenciesTimelineReport(SecurityAnalysisReport securityAnalysisReport, ReportNode reportNode) {
-        for (PostContingencyResult postContingencyResult : securityAnalysisReport.getResult().getPostContingencyResults()) {
-            String contingencyId = postContingencyResult.getContingency().getId();
-            List<LimitViolation> limitViolations = Optional.ofNullable(postContingencyResult.getLimitViolationsResult())
-                    .map(LimitViolationsResult::getLimitViolations).orElse(null);
-
-            ReportNode contingencyReportNode = getReportNode(reportNode, "saContingency", String.format("(.*)%s(.*)", contingencyId));
-            if (contingencyReportNode != null) {
-                contingencyReportNode.newReportNode()
-                        .withSeverity(postContingencyResult.getStatus() == PostContingencyComputationStatus.CONVERGED ? TypedValue.INFO_SEVERITY : TypedValue.ERROR_SEVERITY)
-                        .withMessageTemplate("dynamicsecurityanalysis.server.saContingencyStatus")
-                        .withUntypedValue("contingencyStatus", postContingencyResult.getStatus().name()).add();
-                if (isNotEmpty(limitViolations)) {
-                    ReportNode limitViolationsReportNode = contingencyReportNode.newReportNode()
-                            .withMessageTemplate("dynamicsecurityanalysis.server.limitViolations")
-                            .add();
-                    for (LimitViolation limitViolation : limitViolations) {
-                        limitViolationsReportNode.newReportNode()
-                                .withSeverity(TypedValue.DETAIL_SEVERITY)
-                                .withMessageTemplate("dynamicsecurityanalysis.server.limitViolation")
-                                .withUntypedValue("count", limitViolations.indexOf(limitViolation) + 1)
-                                .withUntypedValue("limitViolation", limitViolation.toString())
-                                .add();
-                    }
-                }
-            }
-        }
     }
 
 }

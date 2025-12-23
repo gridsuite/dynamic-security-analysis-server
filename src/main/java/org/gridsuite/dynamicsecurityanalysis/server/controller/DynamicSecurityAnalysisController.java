@@ -37,7 +37,7 @@ import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
  */
 @RestController
 @RequestMapping(value = "/" + API_VERSION)
-@Tag(name = "Dynamic simulation server")
+@Tag(name = "Dynamic security analysis server")
 public class DynamicSecurityAnalysisController {
 
     private final DynamicSecurityAnalysisService dynamicSecurityAnalysisService;
@@ -84,7 +84,7 @@ public class DynamicSecurityAnalysisController {
 
     @GetMapping(value = "/results/{resultUuid}/status", produces = "application/json")
     @Operation(summary = "Get the dynamic security analysis status from the database")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation status"),
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic security analysis status"),
         @ApiResponse(responseCode = "204", description = "Dynamic security analysis status is empty"),
         @ApiResponse(responseCode = "404", description = "Dynamic security analysis result uuid has not been found")})
     public ResponseEntity<DynamicSecurityAnalysisStatus> getStatus(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
@@ -104,7 +104,7 @@ public class DynamicSecurityAnalysisController {
 
     @DeleteMapping(value = "/results/{resultUuid}")
     @Operation(summary = "Delete a dynamic security analysis result from the database")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation result has been deleted")})
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic security analysis result has been deleted")})
     public ResponseEntity<Void> deleteResult(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
         dynamicSecurityAnalysisResultService.delete(resultUuid);
         return ResponseEntity.ok().build();
@@ -128,7 +128,7 @@ public class DynamicSecurityAnalysisController {
     }
 
     @GetMapping(value = "/providers", produces = APPLICATION_JSON_VALUE)
-    @Operation(summary = "Get all security analysis simulation providers")
+    @Operation(summary = "Get all security analysis providers")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Dynamic security analysis providers have been found")})
     public ResponseEntity<List<String>> getProviders() {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
