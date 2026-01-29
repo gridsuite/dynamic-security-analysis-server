@@ -15,6 +15,7 @@ import com.powsybl.contingency.Contingency;
 import com.powsybl.dynamicsimulation.DynamicModelsSupplier;
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
 import com.powsybl.dynawo.suppliers.dynamicmodels.DynamicModelConfig;
+import com.powsybl.dynawo.suppliers.dynamicmodels.DynamicModelConfigJsonUtils;
 import com.powsybl.dynawo.suppliers.dynamicmodels.DynawoModelsSupplier;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
@@ -129,7 +130,7 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
 
         // get dynamic model list from dynamic simulation server
         byte[] dynamicSimulationZippedDynamicModel = dynamicSimulationClient.getDynamicModel(runContext.getDynamicSimulationResultUuid());
-        List<DynamicModelConfig> dynamicModel = parametersService.unZipDynamicModel(dynamicSimulationZippedDynamicModel, objectMapper);
+        List<DynamicModelConfig> dynamicModel = parametersService.unZipDynamicModel(dynamicSimulationZippedDynamicModel, DynamicModelConfigJsonUtils.createObjectMapper());
 
         // get dynamic simulation parameters from dynamic simulation server
         byte[] dynamicSimulationZippedParameters = dynamicSimulationClient.getDynamicSimulationParameters(runContext.getDynamicSimulationResultUuid());

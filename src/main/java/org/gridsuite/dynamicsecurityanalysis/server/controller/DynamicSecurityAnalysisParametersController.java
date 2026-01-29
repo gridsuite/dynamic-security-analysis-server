@@ -121,7 +121,7 @@ public class DynamicSecurityAnalysisParametersController {
     @ApiResponse(responseCode = "404", description = "parameters were not found")
     public ResponseEntity<DynamicSecurityAnalysisParametersValues> getParametersValues(
             @Parameter(description = "parameters UUID") @PathVariable("uuid") UUID parametersUuid,
-            @RequestParam(value = "networkUuid") UUID networkUuid,
+            @RequestParam(name = "networkUuid") UUID networkUuid,
             @RequestParam(name = VARIANT_ID_HEADER, required = false) String variantId) {
         return ResponseEntity.of(Optional.of(parametersService.getParametersValues(parametersUuid, networkUuid, variantId)));
     }

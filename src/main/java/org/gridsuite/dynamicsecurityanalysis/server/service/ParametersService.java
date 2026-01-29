@@ -128,7 +128,6 @@ public class ParametersService {
         try {
             // unzip dynamic model
             List<DynamicModelConfig> dynamicModel = Utils.unzip(dynamicSimulationZippedDynamicModel, objectMapper, new TypeReference<>() { });
-            Utils.postDeserializerDynamicModel(dynamicModel);
             return dynamicModel;
         } catch (IOException e) {
             throw new UncheckedIOException("Error occurred while unzip the dynamic model", e);
