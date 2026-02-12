@@ -131,18 +131,12 @@ public class DynamicSecurityAnalysisControllerIEEE14Test extends AbstractDynamic
 
     @Override
     protected void initDynamicSecurityAnalysisParametersRepositoryMock() {
-        given(dynamicSecurityAnalysisParametersRepository.findById(PARAMETERS_UUID)).willReturn(Optional.of(new DynamicSecurityAnalysisParametersEntity()));
-    }
-
-    @Override
-    protected void initParametersServiceSpy() {
         DynamicSecurityAnalysisParametersInfos defaultParams = parametersService.getDefaultParametersValues("Dynawo");
         defaultParams.setScenarioDuration(50.0);
         defaultParams.setContingenciesStartTime(5.0);
         defaultParams.setContingencyListIds(List.of(CONTINGENCY_UUID));
-
-        // setup spy bean
-        when(parametersService.getParameters(PARAMETERS_UUID)).thenReturn(defaultParams);
+        DynamicSecurityAnalysisParametersEntity entity = new DynamicSecurityAnalysisParametersEntity(defaultParams);
+        given(dynamicSecurityAnalysisParametersRepository.findById(PARAMETERS_UUID)).willReturn(Optional.of(entity));
     }
 
     @Test

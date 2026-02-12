@@ -102,9 +102,6 @@ public abstract class AbstractDynamicSecurityAnalysisControllerTest extends Abst
         // DynamicSecurityAnalysisParametersRepository mock
         initDynamicSecurityAnalysisParametersRepositoryMock();
 
-        // ParametersService spy
-        initParametersServiceSpy();
-
         // DynamicSecurityAnalysisWorkerService spy
         initDynamicSecurityAnalysisWorkerServiceSpy();
     }
@@ -136,8 +133,6 @@ public abstract class AbstractDynamicSecurityAnalysisControllerTest extends Abst
     protected abstract void initActionsClientMock();
 
     protected abstract void initDynamicSecurityAnalysisParametersRepositoryMock();
-
-    protected abstract void initParametersServiceSpy();
 
     private void initDynamicSecurityAnalysisWorkerServiceSpy() {
         // setup spy bean

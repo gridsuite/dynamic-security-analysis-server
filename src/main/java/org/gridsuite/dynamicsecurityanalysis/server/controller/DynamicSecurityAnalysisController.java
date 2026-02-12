@@ -128,7 +128,7 @@ public class DynamicSecurityAnalysisController {
     }
 
     @GetMapping(value = "/providers", produces = APPLICATION_JSON_VALUE)
-    @Operation(summary = "Get all security analysis providers")
+    @Operation(summary = "Get all dynamic security analysis providers")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Dynamic security analysis providers have been found")})
     public ResponseEntity<List<String>> getProviders() {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)

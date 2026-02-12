@@ -15,7 +15,6 @@ import com.powsybl.dynawo.DumpFileParameters;
 import com.powsybl.dynawo.DynawoSimulationParameters;
 import com.powsybl.dynawo.suppliers.dynamicmodels.DynamicModelConfig;
 import com.powsybl.security.dynamic.DynamicSecurityAnalysisParameters;
-import jakarta.transaction.Transactional;
 import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.computation.dto.ReportInfos;
 import org.gridsuite.computation.error.ComputationException;
@@ -31,6 +30,7 @@ import org.gridsuite.dynamicsecurityanalysis.server.utils.Utils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -66,6 +66,7 @@ public class ParametersService {
         this.actionsClient = actionsClient;
     }
 
+    @Transactional(readOnly = true)
     public DynamicSecurityAnalysisRunContext createRunContext(UUID networkUuid, String variantId, String receiver,
                                                               String provider, ReportInfos reportInfos, String userId,
                                                               UUID dynamicSimulationResultUuid,
@@ -73,7 +74,7 @@ public class ParametersService {
                                                               boolean debug) {
 
         // get parameters from the local database
-        DynamicSecurityAnalysisParametersInfos dynamicSecurityAnalysisParametersInfos = getParameters(dynamicSecurityAnalysisParametersUuid);
+        DynamicSecurityAnalysisParametersInfos dynamicSecurityAnalysisParametersInfos = doGetParameters(dynamicSecurityAnalysisParametersUuid);
 
         // build run context
         DynamicSecurityAnalysisRunContext runContext = DynamicSecurityAnalysisRunContext.builder()
@@ -145,20 +146,31 @@ public class ParametersService {
 
     // --- Dynamic security analysis parameters related methods --- //
 
+    @Transactional(readOnly = true)
     public DynamicSecurityAnalysisParametersInfos getParameters(UUID parametersUuid) {
+        return doGetParameters(parametersUuid);
+    }
+
+    private DynamicSecurityAnalysisParametersInfos doGetParameters(UUID parametersUuid) {
         DynamicSecurityAnalysisParametersEntity entity = dynamicSecurityAnalysisParametersRepository.findById(parametersUuid)
                 .orElseThrow(() -> new ComputationException(PARAMETERS_NOT_FOUND, MSG_PARAMETERS_UUID_NOT_FOUND + parametersUuid));
 
         return new DynamicSecurityAnalysisParametersInfos(parametersUuid, entity.getProvider(), entity.getScenarioDuration(), entity.getContingenciesStartTime(), entity.getContingencyListIds());
     }
 
+    @Transactional
     public UUID createParameters(DynamicSecurityAnalysisParametersInfos parametersInfos) {
+        return doCreateParameters(parametersInfos);
+    }
+
+    private UUID doCreateParameters(DynamicSecurityAnalysisParametersInfos parametersInfos) {
         return dynamicSecurityAnalysisParametersRepository.save(new DynamicSecurityAnalysisParametersEntity(parametersInfos)).getId();
     }
 
+    @Transactional
     public UUID createDefaultParameters() {
         DynamicSecurityAnalysisParametersInfos defaultParametersInfos = getDefaultParametersValues(defaultProvider);
-        return createParameters(defaultParametersInfos);
+        return doCreateParameters(defaultParametersInfos);
     }
 
     public DynamicSecurityAnalysisParametersInfos getDefaultParametersValues(String provider) {
@@ -177,9 +189,10 @@ public class ParametersService {
                 .orElseThrow(() -> new ComputationException(PARAMETERS_NOT_FOUND, MSG_PARAMETERS_UUID_NOT_FOUND + sourceParametersUuid));
         DynamicSecurityAnalysisParametersInfos duplicatedParametersInfos = entity.toDto();
         duplicatedParametersInfos.setId(null);
-        return createParameters(duplicatedParametersInfos);
+        return doCreateParameters(duplicatedParametersInfos);
     }
 
+    @Transactional(readOnly = true)
     public List<DynamicSecurityAnalysisParametersInfos> getAllParameters() {
         return dynamicSecurityAnalysisParametersRepository.findAll().stream()
                 .map(DynamicSecurityAnalysisParametersEntity::toDto)
@@ -198,6 +211,7 @@ public class ParametersService {
         }
     }
 
+    @Transactional
     public void deleteParameters(UUID parametersUuid) {
         dynamicSecurityAnalysisParametersRepository.deleteById(parametersUuid);
     }
@@ -220,6 +234,7 @@ public class ParametersService {
         return contingencies;
     }
 
+    @Transactional(readOnly = true)
     public DynamicSecurityAnalysisParametersValues getParametersValues(UUID parametersUuid, UUID networkUuid, String variantId) {
         DynamicSecurityAnalysisParametersEntity entity = dynamicSecurityAnalysisParametersRepository.findById(parametersUuid)
                 .orElseThrow(() -> new ComputationException(PARAMETERS_NOT_FOUND, MSG_PARAMETERS_UUID_NOT_FOUND + parametersUuid));
