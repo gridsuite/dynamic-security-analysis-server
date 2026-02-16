@@ -44,6 +44,8 @@
     <properties>
         <gridsuite-dependencies.version>47.0.0</gridsuite-dependencies.version>
         <jib.from.image>powsybl/java-dynawo:3.1.0</jib.from.image>
+        <!-- FIXME to remove when upgrade powsybl-ws-dependencies to springboot 3.5.9 -->
+        <testcontainers.version>1.21.4</testcontainers.version>
         <liquibase-hibernate-package>org.gridsuite.dynamicsecurityanalysis.server</liquibase-hibernate-package>
         <sonar.organization>gridsuite</sonar.organization>
         <sonar.projectKey>org.gridsuite:dynamic-security-analysis-server</sonar.projectKey>
@@ -86,6 +88,12 @@
     <dependencyManagement>
         <dependencies>
             <!-- overrides of imports -->
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers</artifactId>
+                <version>${testcontainers.version}</version>
+            </dependency>
+
             <!-- imports -->
             <dependency>
                 <groupId>org.gridsuite</groupId>
