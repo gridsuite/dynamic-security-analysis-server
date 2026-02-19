@@ -9,7 +9,6 @@ package org.gridsuite.dynamicsecurityanalysis.server.controller;
 import com.powsybl.commons.datasource.ReadOnlyDataSource;
 import com.powsybl.commons.datasource.ResourceDataSource;
 import com.powsybl.commons.datasource.ResourceSet;
-import com.powsybl.commons.report.ReportNode;
 import com.powsybl.contingency.Contingency;
 import com.powsybl.iidm.network.Importers;
 import com.powsybl.iidm.network.Network;
@@ -24,7 +23,6 @@ import org.gridsuite.dynamicsecurityanalysis.server.dto.DynamicSecurityAnalysisS
 import org.gridsuite.dynamicsecurityanalysis.server.dto.contingency.ContingencyInfos;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.parameters.DynamicSecurityAnalysisParametersInfos;
 import org.gridsuite.dynamicsecurityanalysis.server.entities.parameters.DynamicSecurityAnalysisParametersEntity;
-import org.gridsuite.dynamicsecurityanalysis.server.service.contexts.DynamicSecurityAnalysisRunContext;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -160,18 +158,12 @@ public class DynamicSecurityAnalysisControllerTest extends AbstractDynamicSecuri
 
     @Override
     protected void initDynamicSecurityAnalysisParametersRepositoryMock() {
-        given(dynamicSecurityAnalysisParametersRepository.findById(PARAMETERS_UUID)).willReturn(Optional.of(new DynamicSecurityAnalysisParametersEntity()));
-    }
-
-    @Override
-    protected void initParametersServiceSpy() {
         DynamicSecurityAnalysisParametersInfos defaultParams = parametersService.getDefaultParametersValues("Dynawo");
         defaultParams.setScenarioDuration(50.0);
         defaultParams.setContingenciesStartTime(5.0);
         defaultParams.setContingencyListIds(List.of(CONTINGENCY_UUID));
-
-        // setup spy bean
-        when(parametersService.getParameters(PARAMETERS_UUID)).thenReturn(defaultParams);
+        DynamicSecurityAnalysisParametersEntity entity = new DynamicSecurityAnalysisParametersEntity(defaultParams);
+        given(dynamicSecurityAnalysisParametersRepository.findById(PARAMETERS_UUID)).willReturn(Optional.of(entity));
     }
 
     @Test
@@ -317,21 +309,6 @@ public class DynamicSecurityAnalysisControllerTest extends AbstractDynamicSecuri
 
         doAnswer(invocation -> null).when(reportService).deleteReport(any());
         doAnswer(invocation -> null).when(reportService).sendReport(any(), any());
-
-        doAnswer(invocation -> {
-            Object[] args = invocation.getArguments();
-            if (args[0] instanceof DynamicSecurityAnalysisRunContext runContext && runContext.getReportInfos().reportUuid() != null) {
-                ReportNode dsaReportNode = runContext.getReportNode().newReportNode()
-                        .withResourceBundles("i18n.reports")
-                        .withMessageTemplate("dsa").add();
-                dsaReportNode.newReportNode().withMessageTemplate("saContingency")
-                        .withUntypedValue("contingencyId", "contingencyId01")
-                        .add();
-            }
-            invocation.callRealMethod();
-            return null;
-        })
-            .when(dynamicSecurityAnalysisWorkerService).postRun(any(), any(), any());
 
         doReturn(CompletableFuture.completedFuture(new SecurityAnalysisReport(
                 new SecurityAnalysisResult(

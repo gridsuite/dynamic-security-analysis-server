@@ -42,7 +42,7 @@ public class DynamicSimulationClient extends AbstractRestClient {
     private byte[] getDynamicSimulationResultElement(@NonNull UUID dynamicSimulationResultUuid, @NonNull String resultElementEndpoint) {
         String endPointUrl = buildEndPointUrl(getBaseUri(), API_VERSION, DYNAMIC_SIMULATION_END_POINT_RESULT);
 
-        UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(endPointUrl + "/{resultUuid}/{resultElementEndpoint}")
+        UriComponents uriComponents = UriComponentsBuilder.fromUriString(endPointUrl + "/{resultUuid}/{resultElementEndpoint}")
                 .buildAndExpand(dynamicSimulationResultUuid, resultElementEndpoint);
 
         // call dynamic-simulation REST API

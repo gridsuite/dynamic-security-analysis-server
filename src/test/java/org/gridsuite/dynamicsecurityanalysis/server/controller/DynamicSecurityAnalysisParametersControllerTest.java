@@ -9,17 +9,23 @@ package org.gridsuite.dynamicsecurityanalysis.server.controller;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.powsybl.contingency.Contingency;
 import org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisApplication;
+import org.gridsuite.dynamicsecurityanalysis.server.dto.contingency.ContingencyInfos;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.parameters.DynamicSecurityAnalysisParametersInfos;
+import org.gridsuite.dynamicsecurityanalysis.server.dto.parameters.DynamicSecurityAnalysisParametersValues;
 import org.gridsuite.dynamicsecurityanalysis.server.entities.parameters.DynamicSecurityAnalysisParametersEntity;
 import org.gridsuite.dynamicsecurityanalysis.server.repositories.DynamicSecurityAnalysisParametersRepository;
 import org.gridsuite.dynamicsecurityanalysis.server.service.ParametersService;
+import org.gridsuite.dynamicsecurityanalysis.server.service.client.ActionsClient;
+import org.gridsuite.dynamicsecurityanalysis.server.utils.assertions.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -27,7 +33,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.gridsuite.computation.service.AbstractResultContext.VARIANT_ID_HEADER;
 import static org.gridsuite.dynamicsecurityanalysis.server.utils.assertions.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -53,6 +63,9 @@ class DynamicSecurityAnalysisParametersControllerTest {
 
     @Autowired
     DynamicSecurityAnalysisParametersRepository parametersRepository;
+
+    @MockitoBean
+    protected ActionsClient actionsClient;
 
     @AfterEach
     void tearDown() {
@@ -237,5 +250,35 @@ class DynamicSecurityAnalysisParametersControllerTest {
 
         // check provider
         assertThat(updatedParametersEntityOpt.get().getProvider()).isEqualTo(newProvider);
+    }
+
+    @Test
+    void testGetParametersValues() throws Exception {
+        // --- Setup --- //
+        DynamicSecurityAnalysisParametersInfos parametersInfos = getParametersInfos();
+        DynamicSecurityAnalysisParametersEntity parametersEntity = new DynamicSecurityAnalysisParametersEntity(parametersInfos);
+        UUID parametersUuid = parametersRepository.saveAndFlush(parametersEntity).getId();
+
+        UUID networkUuid = UUID.fromString("75d2edb9-cccc-468f-9797-6888ba9a5948");
+        String variantId = "variantId";
+
+        when(actionsClient.getContingencyList(anyList(), eq(networkUuid), eq(variantId)))
+                .thenReturn(List.of(new ContingencyInfos(Contingency.load("_LOAD__11_EC"))));
+
+        // --- Execute --- //
+        MvcResult result = mockMvc.perform(get("/v1/parameters/" + parametersUuid + "/values")
+                .param("networkUuid", networkUuid.toString())
+                .param(VARIANT_ID_HEADER, variantId))
+                    .andExpect(status().isOk())
+                    .andReturn();
+        String resultParametersValuesJson = result.getResponse().getContentAsString();
+        DynamicSecurityAnalysisParametersValues parametersValues = objectMapper.readValue(resultParametersValuesJson, DynamicSecurityAnalysisParametersValues.class);
+
+        // -- Verify --- //
+        Assertions.assertThat(parametersValues.getContingencies()).isNotEmpty();
+        Assertions.assertThat(parametersValues.getContingencies().getFirst().getId()).isEqualTo("_LOAD__11_EC");
+        Assertions.assertThat(parametersValues.getContingenciesStartTime()).isEqualTo(parametersInfos.getContingenciesStartTime());
+
+        verify(actionsClient, times(1)).getContingencyList(anyList(), eq(networkUuid), eq(variantId));
     }
 }
