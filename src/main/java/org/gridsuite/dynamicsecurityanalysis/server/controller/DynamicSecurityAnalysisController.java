@@ -30,7 +30,6 @@ import static org.gridsuite.computation.service.AbstractResultContext.*;
 import static org.gridsuite.computation.service.NotificationService.*;
 import static org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisApi.API_VERSION;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
-import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -133,13 +132,6 @@ public class DynamicSecurityAnalysisController {
     public ResponseEntity<List<String>> getProviders() {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
                 .body(dynamicSecurityAnalysisService.getProviders());
-    }
-
-    @GetMapping(value = "/default-provider", produces = TEXT_PLAIN_VALUE)
-    @Operation(summary = "Get dynamic security analysis default provider")
-    @ApiResponses(@ApiResponse(responseCode = "200", description = "The dynamic security analysis default provider has been found"))
-    public ResponseEntity<String> getDefaultProvider() {
-        return ResponseEntity.ok().body(dynamicSecurityAnalysisService.getDefaultProvider());
     }
 
     @GetMapping(value = "/results/{resultUuid}/download-debug-file", produces = "application/json")

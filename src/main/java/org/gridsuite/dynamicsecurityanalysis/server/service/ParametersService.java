@@ -169,14 +169,14 @@ public class ParametersService {
 
     @Transactional
     public UUID createDefaultParameters() {
-        DynamicSecurityAnalysisParametersInfos defaultParametersInfos = getDefaultParametersValues(defaultProvider);
+        DynamicSecurityAnalysisParametersInfos defaultParametersInfos = getDefaultParametersValues();
         return doCreateParameters(defaultParametersInfos);
     }
 
-    public DynamicSecurityAnalysisParametersInfos getDefaultParametersValues(String provider) {
+    public DynamicSecurityAnalysisParametersInfos getDefaultParametersValues() {
         DynamicSecurityAnalysisParameters defaultConfigParameters = DynamicSecurityAnalysisParameters.load();
         return DynamicSecurityAnalysisParametersInfos.builder()
-                .provider(provider)
+                .provider(defaultProvider)
                 .scenarioDuration(5.0)
                 .contingenciesStartTime(defaultConfigParameters.getDynamicContingenciesParameters().getContingenciesStartTime())
                 .contingencyListIds(null)
@@ -204,8 +204,8 @@ public class ParametersService {
         DynamicSecurityAnalysisParametersEntity entity = dynamicSecurityAnalysisParametersRepository.findById(parametersUuid)
                 .orElseThrow(() -> new ComputationException(PARAMETERS_NOT_FOUND, MSG_PARAMETERS_UUID_NOT_FOUND + parametersUuid));
         if (parametersInfos == null) {
-            //if the parameters is null it means it's a reset to defaultValues, but we need to keep the provider because it's updated separately
-            entity.update(getDefaultParametersValues(Optional.ofNullable(entity.getProvider()).orElse(defaultProvider)));
+            //if the parameters is null it means it's a reset to defaultValues
+            entity.update(getDefaultParametersValues());
         } else {
             entity.update(parametersInfos);
         }
@@ -214,13 +214,6 @@ public class ParametersService {
     @Transactional
     public void deleteParameters(UUID parametersUuid) {
         dynamicSecurityAnalysisParametersRepository.deleteById(parametersUuid);
-    }
-
-    @Transactional
-    public void updateProvider(UUID parametersUuid, String provider) {
-        DynamicSecurityAnalysisParametersEntity entity = dynamicSecurityAnalysisParametersRepository.findById(parametersUuid)
-                .orElseThrow(() -> new ComputationException(PARAMETERS_NOT_FOUND, MSG_PARAMETERS_UUID_NOT_FOUND + parametersUuid));
-        entity.setProvider(provider != null ? provider : defaultProvider);
     }
 
     // --- Dynamic security analysis evaluated parameters related methods --- //

@@ -74,7 +74,7 @@ class DynamicSecurityAnalysisParametersControllerTest {
     }
 
     private DynamicSecurityAnalysisParametersInfos getParametersInfos() {
-        DynamicSecurityAnalysisParametersInfos defaultParams = parametersService.getDefaultParametersValues("Dynawo");
+        DynamicSecurityAnalysisParametersInfos defaultParams = parametersService.getDefaultParametersValues();
         defaultParams.setScenarioDuration(50.0);
         defaultParams.setContingenciesStartTime(5.0);
         defaultParams.setContingencyListIds(List.of(CONTINGENCY_UUID));
@@ -231,25 +231,6 @@ class DynamicSecurityAnalysisParametersControllerTest {
 
         // check provider
         assertThat(provider).isEqualTo(parametersInfos.getProvider());
-    }
-
-    @Test
-    void testUpdateProvider() throws Exception {
-        DynamicSecurityAnalysisParametersInfos parametersInfos = getParametersInfos();
-        DynamicSecurityAnalysisParametersEntity parametersEntity = new DynamicSecurityAnalysisParametersEntity(parametersInfos);
-        UUID parametersUuid = parametersRepository.save(parametersEntity).getId();
-
-        String newProvider = "Dynawo2";
-
-        mockMvc.perform(put("/v1/parameters/" + parametersUuid + "/provider")
-                        .content(newProvider))
-                .andExpect(status().isOk());
-
-        Optional<DynamicSecurityAnalysisParametersEntity> updatedParametersEntityOpt = parametersRepository.findById(parametersUuid);
-        assertThat(updatedParametersEntityOpt).isPresent();
-
-        // check provider
-        assertThat(updatedParametersEntityOpt.get().getProvider()).isEqualTo(newProvider);
     }
 
     @Test
