@@ -20,7 +20,7 @@ spring:
           destination: ${powsybl-ws.rabbitmq.destination.prefix:}dsa.debug
         publishResult-out-0:
           destination: ${powsybl-ws.rabbitmq.destination.prefix:}dsa.result
-        consumeCangcel-in-0:
+        consumeCancel-in-0:
           destination: ${powsybl-ws.rabbitmq.destination.prefix:}dsa.cancel
         publishCancel-out-0:
           destination: ${powsybl-ws.rabbitmq.destination.prefix:}dsa.cancel
