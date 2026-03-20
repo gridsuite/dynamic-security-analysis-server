@@ -27,7 +27,8 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.gridsuite.computation.service.AbstractResultContext.*;
-import static org.gridsuite.computation.service.NotificationService.*;
+import static org.gridsuite.computation.service.NotificationService.HEADER_RECEIVER;
+import static org.gridsuite.computation.service.NotificationService.HEADER_USER_ID;
 import static org.gridsuite.dynamicsecurityanalysis.server.DynamicSecurityAnalysisApi.API_VERSION;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
@@ -60,7 +61,6 @@ public class DynamicSecurityAnalysisController {
                                           @RequestParam(name = "reportUuid", required = false) UUID reportId,
                                           @RequestParam(name = REPORTER_ID_HEADER, required = false) String reportName,
                                           @RequestParam(name = REPORT_TYPE_HEADER, required = false, defaultValue = "DynamicSecurityAnalysis") String reportType,
-                                          @RequestParam(name = HEADER_PROVIDER, required = false) String provider,
                                           @RequestParam(name = "debug", required = false, defaultValue = "false") boolean debug,
                                           @RequestParam(name = "dynamicSimulationResultUuid") UUID dynamicSimulationResultUuid,
                                           @RequestParam(name = "parametersUuid") UUID parametersUuid,
@@ -70,7 +70,6 @@ public class DynamicSecurityAnalysisController {
             networkUuid,
             variantId,
             receiver,
-            provider,
             ReportInfos.builder().reportUuid(reportId).reporterId(reportName).computationType(reportType).build(),
             userId,
             dynamicSimulationResultUuid,

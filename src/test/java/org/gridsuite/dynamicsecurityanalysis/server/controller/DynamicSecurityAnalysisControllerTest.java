@@ -281,13 +281,21 @@ public class DynamicSecurityAnalysisControllerTest extends AbstractDynamicSecuri
 
     @Test
     void testRunWithSynchronousExceptions() throws Exception {
+
+        // mock a fake provider in a parameter
+        DynamicSecurityAnalysisParametersInfos defaultParams = parametersService.getDefaultParametersValues();
+        defaultParams.setProvider("notFoundProvider");
+        DynamicSecurityAnalysisParametersEntity entity = new DynamicSecurityAnalysisParametersEntity(defaultParams);
+        UUID notFoundProviderParametersUuid = UUID.randomUUID();
+        given(dynamicSecurityAnalysisParametersRepository.findById(notFoundProviderParametersUuid)).willReturn(Optional.of(entity));
+
         //run the dynamic security analysis on a non-exiting provider
         mockMvc.perform(
                         post("/v1/networks/{networkUuid}/run", NETWORK_UUID.toString())
                         .param(HEADER_PROVIDER, "notFoundProvider")
                         .param(VARIANT_ID_HEADER, VARIANT_1_ID)
                         .param("dynamicSimulationResultUuid", DYNAMIC_SIMULATION_RESULT_UUID.toString())
-                        .param("parametersUuid", PARAMETERS_UUID.toString())
+                        .param("parametersUuid", notFoundProviderParametersUuid.toString())
                         .contentType(APPLICATION_JSON)
                         .header(HEADER_USER_ID, "testUserId"))
                         .andExpect(status().isNotFound());
