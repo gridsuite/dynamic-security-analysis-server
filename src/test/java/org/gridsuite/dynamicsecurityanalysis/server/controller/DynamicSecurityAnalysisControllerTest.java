@@ -10,12 +10,16 @@ import com.powsybl.commons.datasource.ReadOnlyDataSource;
 import com.powsybl.commons.datasource.ResourceDataSource;
 import com.powsybl.commons.datasource.ResourceSet;
 import com.powsybl.contingency.Contingency;
+import com.powsybl.contingency.violations.LimitViolation;
+import com.powsybl.contingency.violations.LimitViolationType;
 import com.powsybl.iidm.network.Importers;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.security.*;
 import com.powsybl.security.dynamic.DynamicSecurityAnalysis;
+import com.powsybl.security.results.ConnectivityResult;
+import com.powsybl.security.results.NetworkResult;
 import com.powsybl.security.results.PostContingencyResult;
 import com.powsybl.security.results.PreContingencyResult;
 import org.gridsuite.computation.service.NotificationService;
@@ -318,7 +322,9 @@ public class DynamicSecurityAnalysisControllerTest extends AbstractDynamicSecuri
                             PostContingencyComputationStatus.CONVERGED,
                             new LimitViolationsResult(List.of(
                                 new LimitViolation("subjectId01", LimitViolationType.HIGH_SHORT_CIRCUIT_CURRENT, 25.63, 4f, 33.54)
-                            )))),
+                            )),
+                            NetworkResult.empty(), ConnectivityResult.empty(), 1.0)
+                    ),
                     List.of()))))
         .when(dynamicSecurityAnalysisWorkerService).getCompletableFuture(any(), any(), any());
 
