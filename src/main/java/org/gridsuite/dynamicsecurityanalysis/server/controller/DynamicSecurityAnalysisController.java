@@ -11,7 +11,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.computation.dto.ReportInfos;
 import org.gridsuite.dynamicsecurityanalysis.server.dto.DynamicSecurityAnalysisStatus;
 import org.gridsuite.dynamicsecurityanalysis.server.service.DynamicSecurityAnalysisResultService;
@@ -92,12 +91,10 @@ public class DynamicSecurityAnalysisController {
 
     @PutMapping(value = "/results/invalidate-status", produces = "application/json")
     @Operation(summary = "Invalidate the dynamic security analysis status from the database")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic security analysis result uuids have been invalidated"),
-        @ApiResponse(responseCode = "404", description = "Dynamic security analysis result has not been found")})
-    public ResponseEntity<List<UUID>> invalidateStatus(@Parameter(description = "Result UUIDs") @RequestParam("resultUuid") List<UUID> resultUuids) {
-        List<UUID> result = dynamicSecurityAnalysisResultService.updateStatus(resultUuids, DynamicSecurityAnalysisStatus.NOT_DONE);
-        return CollectionUtils.isEmpty(result) ? ResponseEntity.notFound().build() :
-                ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result);
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic security analysis result uuids have been invalidated")})
+    public ResponseEntity<Void> invalidateStatus(@Parameter(description = "Result UUIDs") @RequestParam("resultUuid") List<UUID> resultUuids) {
+        dynamicSecurityAnalysisResultService.updateStatus(resultUuids, DynamicSecurityAnalysisStatus.NOT_DONE);
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping(value = "/results/{resultUuid}")

@@ -255,10 +255,10 @@ public class DynamicSecurityAnalysisControllerTest extends AbstractDynamicSecuri
 
         assertThat(statusAfterInvalidate).isSameAs(DynamicSecurityAnalysisStatus.NOT_DONE);
 
-        // set NOT_DONE for none existing result
+        // set NOT_DONE for none existing result => 200 (same as delete)
         mockMvc.perform(
                         put("/v1/results/invalidate-status?resultUuid=" + UUID.randomUUID()))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isOk());
 
         //delete a result
         mockMvc.perform(
