@@ -68,7 +68,7 @@ public class ParametersService {
 
     @Transactional(readOnly = true)
     public DynamicSecurityAnalysisRunContext createRunContext(UUID networkUuid, String variantId, String receiver,
-                                                              String provider, ReportInfos reportInfos, String userId,
+                                                              ReportInfos reportInfos, String userId,
                                                               UUID dynamicSimulationResultUuid,
                                                               UUID dynamicSecurityAnalysisParametersUuid,
                                                               boolean debug) {
@@ -89,11 +89,7 @@ public class ParametersService {
         runContext.setDynamicSimulationResultUuid(dynamicSimulationResultUuid);
 
         // set provider for run context
-        String providerToUse = provider;
-        if (providerToUse == null) {
-            providerToUse = Optional.ofNullable(runContext.getParameters().getProvider()).orElse(defaultProvider);
-        }
-
+        String providerToUse = Optional.ofNullable(runContext.getParameters().getProvider()).orElse(defaultProvider);
         runContext.setProvider(providerToUse);
 
         // check provider
