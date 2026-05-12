@@ -14,6 +14,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -25,4 +26,5 @@ public interface DynamicSecurityAnalysisResultRepository extends JpaRepository<D
     @Query("UPDATE DynamicSecurityAnalysisResultEntity r SET r.debugFileLocation = :debugFileLocation WHERE r.id = :resultUuid")
     int updateDebugFileLocation(@Param("resultUuid") UUID resultUuid, @Param("debugFileLocation") String debugFileLocation);
 
+    List<DynamicSecurityAnalysisResultEntity> findByResultUuidIn(List<UUID> resultUuids);
 }

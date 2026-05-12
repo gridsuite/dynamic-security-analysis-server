@@ -18,8 +18,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static org.gridsuite.computation.error.ComputationBusinessErrorCode.RESULT_NOT_FOUND;
 
@@ -93,6 +95,14 @@ public class DynamicSecurityAnalysisResultService extends AbstractComputationRes
         return resultRepository.findById(resultUuid)
             .map(DynamicSecurityAnalysisResultEntity::getStatus)
             .orElse(null);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<UUID, DynamicSecurityAnalysisStatus> findStatuses(List<UUID> resultUuids) {
+        Objects.requireNonNull(resultUuids);
+        List<DynamicSecurityAnalysisResultEntity> resultEntities = resultRepository.findByResultUuidIn(resultUuids);
+        return resultEntities.stream().collect(Collectors.toMap(DynamicSecurityAnalysisResultEntity::getId, DynamicSecurityAnalysisResultEntity::getStatus));
     }
 
     @Override
