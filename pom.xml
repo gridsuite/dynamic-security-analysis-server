@@ -47,6 +47,8 @@
         <liquibase-hibernate-package>org.gridsuite.dynamicsecurityanalysis.server</liquibase-hibernate-package>
         <sonar.organization>gridsuite</sonar.organization>
         <sonar.projectKey>org.gridsuite:dynamic-security-analysis-server</sonar.projectKey>
+        <!-- FIXME: to be removed at next powsybl-ws-dependencies upgrade  -->
+        <gridsuite-computation.version>2.3.0-SNAPSHOT</gridsuite-computation.version>
     </properties>
 
     <build>
@@ -147,6 +149,7 @@
         <dependency>
             <groupId>org.gridsuite</groupId>
             <artifactId>gridsuite-computation</artifactId>
+            <version>${gridsuite-computation.version}</version>
         </dependency>
 
         <!-- runtime dependencies -->

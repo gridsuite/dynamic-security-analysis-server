@@ -23,6 +23,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.gridsuite.computation.service.AbstractResultContext.*;
@@ -85,8 +86,15 @@ public class DynamicSecurityAnalysisController {
         @ApiResponse(responseCode = "204", description = "Dynamic security analysis status is empty"),
         @ApiResponse(responseCode = "404", description = "Dynamic security analysis result uuid has not been found")})
     public ResponseEntity<DynamicSecurityAnalysisStatus> getStatus(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
-        DynamicSecurityAnalysisStatus result = dynamicSecurityAnalysisService.getStatus(resultUuid);
+        DynamicSecurityAnalysisStatus result = dynamicSecurityAnalysisResultService.findStatus(resultUuid);
         return ResponseEntity.ok().body(result);
+    }
+
+    @PostMapping(value = "/results/statuses", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get dynamic security analysis statuses from the database")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic security analysis statuses")})
+    public ResponseEntity<Map<UUID, DynamicSecurityAnalysisStatus>> getStatuses(@Parameter(description = "Result uuids") @RequestBody List<UUID> resultUuids) {
+        return ResponseEntity.ok().body(dynamicSecurityAnalysisResultService.findStatuses(resultUuids));
     }
 
     @PutMapping(value = "/results/invalidate-status", produces = "application/json")
