@@ -24,5 +24,5 @@ public interface DynamicSecurityAnalysisResultRepository extends JpaRepository<D
     @Modifying
     @Query("UPDATE DynamicSecurityAnalysisResultEntity r SET r.debugFileLocation = :debugFileLocation WHERE r.id = :resultUuid")
     int updateDebugFileLocation(@Param("resultUuid") UUID resultUuid, @Param("debugFileLocation") String debugFileLocation);
-    
+
 }
