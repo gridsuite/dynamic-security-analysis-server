@@ -101,7 +101,7 @@ public class DynamicSecurityAnalysisResultService extends AbstractComputationRes
     @Transactional(readOnly = true)
     public Map<UUID, DynamicSecurityAnalysisStatus> findStatuses(List<UUID> resultUuids) {
         Objects.requireNonNull(resultUuids);
-        List<DynamicSecurityAnalysisResultEntity> resultEntities = resultRepository.findByResultUuidIn(resultUuids);
+        List<DynamicSecurityAnalysisResultEntity> resultEntities = resultRepository.findAllById(resultUuids);
         return resultEntities.stream().collect(Collectors.toMap(DynamicSecurityAnalysisResultEntity::getId, DynamicSecurityAnalysisResultEntity::getStatus));
     }
 
