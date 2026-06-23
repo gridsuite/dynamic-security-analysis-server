@@ -60,7 +60,8 @@ import static org.gridsuite.dynamicsecurityanalysis.server.service.DynamicSecuri
  */
 @ComponentScan(basePackageClasses = {NetworkStoreService.class, NotificationService.class})
 @Service
-public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<SecurityAnalysisReport, DynamicSecurityAnalysisRunContext, DynamicSecurityAnalysisParametersInfos, DynamicSecurityAnalysisResultService> {
+public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<SecurityAnalysisReport, DynamicSecurityAnalysisRunContext, DynamicSecurityAnalysisParametersInfos,
+        DynamicSecurityAnalysisResultService> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DynamicSecurityAnalysisWorkerService.class);
 
@@ -78,7 +79,8 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
                                                 DynamicSimulationClient dynamicSimulationClient,
                                                 ParametersService parametersService,
                                                 PropertyServerNameProvider propertyServerNameProvider) {
-        super(networkStoreService, notificationService, reportService, dynamicSecurityAnalysisResultService, computationS3Service, executionService, observer, objectMapper, propertyServerNameProvider);
+        super(networkStoreService, notificationService, reportService, dynamicSecurityAnalysisResultService, computationS3Service, executionService, observer, objectMapper,
+                propertyServerNameProvider);
         this.dynamicSimulationClient = Objects.requireNonNull(dynamicSimulationClient);
         this.parametersService = Objects.requireNonNull(parametersService);
     }
@@ -99,7 +101,8 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
 
     public void updateResult(UUID resultUuid, SecurityAnalysisReport result) {
         Objects.requireNonNull(resultUuid);
-        DynamicSecurityAnalysisStatus status = result.getResult().getPostContingencyResults().stream().anyMatch(postContingencyResult -> postContingencyResult.getStatus() == PostContingencyComputationStatus.FAILED) ?
+        DynamicSecurityAnalysisStatus status = result.getResult().getPostContingencyResults().stream().anyMatch(
+                postContingencyResult -> postContingencyResult.getStatus() == PostContingencyComputationStatus.FAILED) ?
                 DynamicSecurityAnalysisStatus.FAILED :
                 DynamicSecurityAnalysisStatus.SUCCEED;
 

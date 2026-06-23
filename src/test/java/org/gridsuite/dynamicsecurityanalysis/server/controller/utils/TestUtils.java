@@ -29,7 +29,7 @@ public final class TestUtils {
         await().pollDelay(TIMEOUT, TimeUnit.MILLISECONDS).until(() -> {
             try {
                 destinations.forEach(destination -> assertThat(output.receive(0, destination)).as("Should not be any messages in queue " + destination + " : ").isNull());
-            } catch (NullPointerException e) {
+            } catch (Exception e) {
                 // Ignoring
             } finally {
                 output.clear(); // purge in order to not fail the other tests

@@ -35,7 +35,8 @@ public class DynamicSimulationClient extends AbstractRestClient {
     public static final String PARAMETERS = "parameters";
 
     @Autowired
-    public DynamicSimulationClient(@Value("${gridsuite.services.dynamic-simulation-server.base-uri:http://dynamic-simulation-server/}") String baseUri, RestTemplate restTemplate, ObjectMapper objectMapper) {
+    public DynamicSimulationClient(@Value("${gridsuite.services.dynamic-simulation-server.base-uri:http://dynamic-simulation-server/}") String baseUri, RestTemplate restTemplate,
+            ObjectMapper objectMapper) {
         super(baseUri, restTemplate, objectMapper);
     }
 
