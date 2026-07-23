@@ -123,7 +123,7 @@ class DynamicSecurityAnalysisParametersControllerTest {
         DynamicSecurityAnalysisParametersEntity originalParametersEntity = new DynamicSecurityAnalysisParametersEntity(parametersInfos);
         UUID originalParametersUuid = parametersRepository.save(originalParametersEntity).getId();
 
-        MvcResult result = mockMvc.perform(post("/v1/parameters?duplicateFrom=" + originalParametersUuid))
+        MvcResult result = mockMvc.perform(post("/v1/parameters/{uuid}/duplicate", originalParametersUuid))
                 .andExpect(status().isOk())
                 .andReturn();
         UUID parametersUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
