@@ -284,6 +284,75 @@ public class DynamicSecurityAnalysisControllerTest extends AbstractDynamicSecuri
     }
 
     @Test
+    void testStatus() throws Exception {
+
+        doReturn(CompletableFuture.completedFuture(new SecurityAnalysisReport(SecurityAnalysisResult.empty())))
+                .when(dynamicSecurityAnalysisWorkerService).getCompletableFuture(any(), any(), any());
+
+        MvcResult result = mockMvc.perform(
+                        post("/v1/networks/{networkUuid}/run", NETWORK_UUID.toString())
+                        .param("dynamicSimulationResultUuid", DYNAMIC_SIMULATION_RESULT_UUID.toString())
+                        .param("parametersUuid", PARAMETERS_UUID.toString())
+                        .contentType(APPLICATION_JSON)
+                        .header(HEADER_USER_ID, "testUserId"))
+                .andExpect(status().isOk())
+                .andReturn();
+        UUID runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
+
+        Message<byte[]> message = output.receive(1000, dsaResultDestination);
+        assertThat(message).isNotNull();
+        assertThat(message.getHeaders()).containsEntry(HEADER_RESULT_UUID, runUuid.toString());
+
+        MvcResult statusResult = mockMvc.perform(
+                        get("/v1/results/{resultUuid}/status", runUuid))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        DynamicSecurityAnalysisStatus status = objectMapper.readValue(statusResult.getResponse().getContentAsString(), DynamicSecurityAnalysisStatus.class);
+        assertThat(status).isIn(DynamicSecurityAnalysisStatus.SUCCEED, DynamicSecurityAnalysisStatus.RUNNING);
+
+        assertResultStatus(UUID.randomUUID(), null);
+    }
+
+    @Test
+    void testStatuses() throws Exception {
+
+        doReturn(CompletableFuture.completedFuture(new SecurityAnalysisReport(SecurityAnalysisResult.empty())))
+                .when(dynamicSecurityAnalysisWorkerService).getCompletableFuture(any(), any(), any());
+
+        MvcResult result = mockMvc.perform(
+                        post("/v1/networks/{networkUuid}/run", NETWORK_UUID.toString())
+                        .param("dynamicSimulationResultUuid", DYNAMIC_SIMULATION_RESULT_UUID.toString())
+                        .param("parametersUuid", PARAMETERS_UUID.toString())
+                        .contentType(APPLICATION_JSON)
+                        .header(HEADER_USER_ID, "testUserId"))
+                .andExpect(status().isOk())
+                .andReturn();
+        UUID runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
+
+        Message<byte[]> message = output.receive(1000, dsaResultDestination);
+        assertThat(message).isNotNull();
+        assertThat(message.getHeaders()).containsEntry(HEADER_RESULT_UUID, runUuid.toString());
+
+        UUID unknownResultUuid = UUID.randomUUID();
+
+        MvcResult statusesResult = mockMvc.perform(
+                        post("/v1/results/statuses")
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(List.of(runUuid, unknownResultUuid))))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        Map<UUID, DynamicSecurityAnalysisStatus> statuses = objectMapper.readValue(
+                statusesResult.getResponse().getContentAsString(),
+                objectMapper.getTypeFactory().constructMapType(Map.class, UUID.class, DynamicSecurityAnalysisStatus.class));
+
+        assertThat(statuses).containsKey(runUuid);
+        assertThat(statuses.get(runUuid)).isIn(DynamicSecurityAnalysisStatus.SUCCEED, DynamicSecurityAnalysisStatus.RUNNING);
+        assertThat(statuses).doesNotContainKey(unknownResultUuid);
+    }
+
+    @Test
     void testRunWithSynchronousExceptions() throws Exception {
 
         // mock a fake provider in a parameter
