@@ -11,7 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -21,7 +21,7 @@ public abstract class AbstractRestClient {
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Getter
-    private final RestTemplate restTemplate;
+    private final RestClient restClient;
 
     @Getter
     private final String baseUri;
@@ -29,9 +29,9 @@ public abstract class AbstractRestClient {
     @Getter
     private final ObjectMapper objectMapper;
 
-    protected AbstractRestClient(String baseUri, RestTemplate restTemplate, ObjectMapper objectMapper) {
+    protected AbstractRestClient(String baseUri, RestClient restClient, ObjectMapper objectMapper) {
         this.baseUri = baseUri;
-        this.restTemplate = restTemplate;
+        this.restClient = restClient;
         this.objectMapper = objectMapper;
     }
 

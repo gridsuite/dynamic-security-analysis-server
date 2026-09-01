@@ -14,10 +14,10 @@ import org.gridsuite.dynamicsecurityanalysis.server.error.DynamicSecurityAnalysi
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -41,8 +41,8 @@ public class ActionsClient extends AbstractRestClient {
     @Autowired
     public ActionsClient(
             @Value("${gridsuite.services.actions-server.base-uri:http://actions-server/}") String baseUri,
-            RestTemplate restTemplate, ObjectMapper objectMapper) {
-        super(baseUri, restTemplate, objectMapper);
+            RestClient restClient, ObjectMapper objectMapper) {
+        super(baseUri, restClient, objectMapper);
     }
 
     public List<ContingencyInfos> getContingencyList(List<UUID> ids, @NonNull UUID networkUuid, String variantId) {
@@ -57,8 +57,11 @@ public class ActionsClient extends AbstractRestClient {
                 .build();
 
         String url = uriComponents.toUriString();
-        ResponseEntity<List<ContingencyInfos>> responseEntity = getRestTemplate()
-                .exchange(url, HttpMethod.GET, null, new ParameterizedTypeReference<>() {
+        ResponseEntity<List<ContingencyInfos>> responseEntity = getRestClient()
+                .get()
+                .uri(url)
+                .retrieve()
+                .toEntity(new ParameterizedTypeReference<>() {
                 });
         logger.debug("Actions REST API called successfully {}", url);
         return responseEntity.getBody();
