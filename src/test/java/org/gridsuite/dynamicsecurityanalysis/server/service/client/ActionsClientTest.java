@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 
 import java.util.List;
 import java.util.UUID;
@@ -45,7 +45,7 @@ public class ActionsClientTest extends AbstractWireMockRestClientTest {
     private ActionsClient actionsClient;
 
     @Autowired
-    RestTemplate restTemplate;
+    RestClient restClient;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -60,7 +60,7 @@ public class ActionsClientTest extends AbstractWireMockRestClientTest {
         actionsClient = new ActionsClient(
                 // use new WireMockServer(ACTIONS_PORT) to test with local server if needed
                 initMockWebServer(new WireMockServer(wireMockConfig().dynamicPort())),
-                restTemplate,
+                restClient,
                 objectMapper);
     }
 

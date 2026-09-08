@@ -14,25 +14,24 @@ import com.powsybl.dynamicsimulation.json.DynamicSimulationParametersJsonModule;
 import com.powsybl.security.dynamic.json.DynamicSecurityAnalysisJsonModule;
 import org.gridsuite.computation.ComputationConfig;
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 @Configuration
 @Import(ComputationConfig.class)
-public class RestTemplateConfig {
+public class RestClientConfig {
     @Bean
-    public RestTemplate restTemplate(RestTemplateBuilder restTemplateBuilder, ObjectMapper objectMapper) {
+    public RestClient restClient(RestClient.Builder restClientBuilder, ObjectMapper objectMapper) {
         MappingJackson2HttpMessageConverter messageConverter = new MappingJackson2HttpMessageConverter(objectMapper);
 
-        return restTemplateBuilder
-                .additionalMessageConverters(messageConverter)
+        return restClientBuilder
+                .messageConverters(converters -> converters.add(messageConverter))
                 .build();
     }
 
