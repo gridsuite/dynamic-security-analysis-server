@@ -12,7 +12,7 @@ import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -35,9 +35,9 @@ public class DynamicSimulationClient extends AbstractRestClient {
     public static final String PARAMETERS = "parameters";
 
     @Autowired
-    public DynamicSimulationClient(@Value("${gridsuite.services.dynamic-simulation-server.base-uri:http://dynamic-simulation-server/}") String baseUri, RestTemplate restTemplate,
+    public DynamicSimulationClient(@Value("${gridsuite.services.dynamic-simulation-server.base-uri:http://dynamic-simulation-server/}") String baseUri, RestClient restClient,
             ObjectMapper objectMapper) {
-        super(baseUri, restTemplate, objectMapper);
+        super(baseUri, restClient, objectMapper);
     }
 
     private byte[] getDynamicSimulationResultElement(@NonNull UUID dynamicSimulationResultUuid, @NonNull String resultElementEndpoint) {
@@ -48,7 +48,11 @@ public class DynamicSimulationClient extends AbstractRestClient {
 
         // call dynamic-simulation REST API
         String url = uriComponents.toUriString();
-        byte[] resultElement = getRestTemplate().getForObject(url, byte[].class);
+        byte[] resultElement = getRestClient()
+                .get()
+                .uri(url)
+                .retrieve()
+                .body(byte[].class);
         logger.debug(DYNAMIC_SIMULATION_REST_API_CALLED_SUCCESSFULLY_MESSAGE, url);
         return resultElement;
     }

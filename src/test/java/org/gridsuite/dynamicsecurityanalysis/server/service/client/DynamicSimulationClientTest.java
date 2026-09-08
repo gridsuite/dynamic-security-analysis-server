@@ -16,7 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 
 import java.util.UUID;
 
@@ -41,7 +41,7 @@ public class DynamicSimulationClientTest extends AbstractWireMockRestClientTest 
     private DynamicSimulationClient dynamicSimulationClient;
 
     @Autowired
-    RestTemplate restTemplate;
+    RestClient restClient;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -56,7 +56,7 @@ public class DynamicSimulationClientTest extends AbstractWireMockRestClientTest 
         dynamicSimulationClient = new DynamicSimulationClient(
                 // use new WireMockServer(DYNAMIC_SIMULATION_PORT) to test with local server if needed
                 initMockWebServer(new WireMockServer(wireMockConfig().dynamicPort())),
-                restTemplate,
+                restClient,
                 objectMapper);
     }
 
