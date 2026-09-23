@@ -394,7 +394,7 @@ public class DynamicSecurityAnalysisControllerTest extends AbstractDynamicSecuri
                         .andReturn();
         UUID runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
 
-        assertResultStatus(runUuid, DynamicSecurityAnalysisStatus.RUNNING);
+        assertResultStatus(runUuid, DynamicSecurityAnalysisStatus.PRELOADING);
 
         // stop dynamic security analysis, need a timeout to avoid test hangs if an exception occurs before latch countdown
         boolean completed = cancelLatch.await(5, TimeUnit.SECONDS);
@@ -469,7 +469,7 @@ public class DynamicSecurityAnalysisControllerTest extends AbstractDynamicSecuri
                 .containsEntry(HEADER_MESSAGE, getCancelFailedMessage(COMPUTATION_TYPE));
         // cancel failed so result still exist but status is still RUNNING
         // TODO need to revisit the implementation in ws-commons, status must be NOT_DONE
-        assertResultStatus(runUuid, DynamicSecurityAnalysisStatus.RUNNING);
+        assertResultStatus(runUuid, DynamicSecurityAnalysisStatus.PRELOADING);
     }
 
     @Test
