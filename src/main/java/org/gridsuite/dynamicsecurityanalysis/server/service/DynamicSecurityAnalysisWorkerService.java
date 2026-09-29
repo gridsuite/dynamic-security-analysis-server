@@ -267,4 +267,8 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
         resultService.insertStatus(List.of(resultUuid), DynamicSecurityAnalysisStatus.RUNNING);
     }
 
+    @Override
+    protected boolean canBeCancelled(UUID resultUuid) {
+        return resultService.findStatus(resultUuid) == DynamicSecurityAnalysisStatus.RUNNING;
+    }
 }
