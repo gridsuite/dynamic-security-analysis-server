@@ -16,7 +16,10 @@ import com.powsybl.iidm.network.Importers;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.PreloadingStrategy;
-import com.powsybl.security.*;
+import com.powsybl.security.LimitViolationsResult;
+import com.powsybl.security.PostContingencyComputationStatus;
+import com.powsybl.security.SecurityAnalysisReport;
+import com.powsybl.security.SecurityAnalysisResult;
 import com.powsybl.security.dynamic.DynamicSecurityAnalysis;
 import com.powsybl.security.results.ConnectivityResult;
 import com.powsybl.security.results.NetworkResult;
@@ -452,7 +455,7 @@ public class DynamicSecurityAnalysisControllerTest extends AbstractDynamicSecuri
             cancelLatch.countDown();
 
             // fake a long process 1s before run computation
-            await().pollDelay(1000, TimeUnit.MILLISECONDS).until(() -> true);
+            await().pollDelay(500, TimeUnit.MILLISECONDS).until(() -> true);
 
             return object;
         })
@@ -467,9 +470,15 @@ public class DynamicSecurityAnalysisControllerTest extends AbstractDynamicSecuri
         assertThat(message.getHeaders())
                 .containsEntry(HEADER_RESULT_UUID, runUuid.toString())
                 .containsEntry(HEADER_MESSAGE, getCancelFailedMessage(COMPUTATION_TYPE));
-        // cancel failed so result still exist but status is still RUNNING
-        // TODO need to revisit the implementation in ws-commons, status must be NOT_DONE
-        assertResultStatus(runUuid, DynamicSecurityAnalysisStatus.PRELOADING);
+
+        // the computation continues to run in the background
+        // Must have a result message in the result queue when computation finished
+        message = output.receive(1000, dsaResultDestination);
+        assertThat(message.getHeaders())
+                .containsEntry(HEADER_RESULT_UUID, runUuid.toString());
+
+        // end computation status must be SUCCEED
+        assertResultStatus(runUuid, DynamicSecurityAnalysisStatus.SUCCEED);
     }
 
     @Test
