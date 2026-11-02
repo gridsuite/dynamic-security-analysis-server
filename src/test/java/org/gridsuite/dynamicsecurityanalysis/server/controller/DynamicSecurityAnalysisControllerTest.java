@@ -334,7 +334,7 @@ public class DynamicSecurityAnalysisControllerTest extends AbstractDynamicSecuri
                             new LimitViolationsResult(List.of(
                                 new LimitViolation("subjectId01", LimitViolationType.HIGH_SHORT_CIRCUIT_CURRENT, 25.63, 4f, 33.54)
                             )),
-                            NetworkResult.empty(), ConnectivityResult.empty(), 1.0)
+                            NetworkResult.empty(), ConnectivityResult.empty(), 1.0, List.of())
                     ),
                     List.of()))))
         .when(dynamicSecurityAnalysisWorkerService).getCompletableFuture(any(), any(), any());
