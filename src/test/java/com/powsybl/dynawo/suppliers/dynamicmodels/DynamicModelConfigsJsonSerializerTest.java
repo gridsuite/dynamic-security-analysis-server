@@ -7,13 +7,11 @@
 
 package com.powsybl.dynawo.suppliers.dynamicmodels;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -26,12 +24,15 @@ class DynamicModelConfigsJsonSerializerTest {
     void testModelConfigDeserializerSerializer() throws IOException {
 
         ObjectMapper objectMapper = DynamicModelConfigJsonUtils.createObjectMapper();
-        List<DynamicModelConfig> dynamicModelConfigs = objectMapper.readValue(getClass().getResourceAsStream("/data/dynamicModels.json"), new TypeReference<>() { });
-        assertEquals(2, dynamicModelConfigs.size());
+        DynamicModelConfigs dynamicModelConfigs = objectMapper.readValue(
+                getClass().getResourceAsStream("/data/dynamicModels.json"), DynamicModelConfigs.class);
+        assertEquals(2, dynamicModelConfigs.dynamicModelConfigList().size());
 
-        String dynamicModelConfigsJson = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(dynamicModelConfigs);
-        List<DynamicModelConfig> dynamicModelConfigs2 = objectMapper.readValue(dynamicModelConfigsJson, new TypeReference<>() { });
+        String dynamicModelConfigsJson = objectMapper.writerWithDefaultPrettyPrinter()
+                .writeValueAsString(dynamicModelConfigs.dynamicModelConfigList());
+        DynamicModelConfigs dynamicModelConfigs2 = objectMapper.readValue(dynamicModelConfigsJson, DynamicModelConfigs.class);
 
-        Assertions.assertThat(dynamicModelConfigs2).usingRecursiveComparison().isEqualTo(dynamicModelConfigs);
+        Assertions.assertThat(dynamicModelConfigs2.dynamicModelConfigList())
+                .usingRecursiveComparison().isEqualTo(dynamicModelConfigs.dynamicModelConfigList());
     }
 }
