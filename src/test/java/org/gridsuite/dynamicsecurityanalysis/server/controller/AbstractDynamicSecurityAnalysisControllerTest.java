@@ -114,7 +114,7 @@ public abstract class AbstractDynamicSecurityAnalysisControllerTest extends Abst
 
         // delete all results
         mockMvc.perform(
-                        delete("/v1/results"))
+                        delete("/v1/supervision/results"))
                 .andExpect(status().isOk());
 
         // check messages in rabbitmq
