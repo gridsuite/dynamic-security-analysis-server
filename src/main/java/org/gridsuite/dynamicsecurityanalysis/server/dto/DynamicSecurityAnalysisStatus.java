@@ -12,6 +12,7 @@ package org.gridsuite.dynamicsecurityanalysis.server.dto;
  */
 public enum DynamicSecurityAnalysisStatus {
     NOT_DONE,
+    PRELOADING,
     RUNNING,
     SUCCEED,
     FAILED
