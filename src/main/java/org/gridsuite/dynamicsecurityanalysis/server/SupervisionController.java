@@ -10,7 +10,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.gridsuite.dynamicsecurityanalysis.server.service.DynamicSecurityAnalysisService;
 import org.gridsuite.dynamicsecurityanalysis.server.service.SupervisionService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -27,11 +26,9 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Dynamic security analysis server - Supervision")
 public class SupervisionController {
     private final SupervisionService supervisionService;
-    private final DynamicSecurityAnalysisService dynamicSecurityAnalysisService;
 
-    public SupervisionController(SupervisionService supervisionService, DynamicSecurityAnalysisService dynamicSecurityAnalysisService) {
+    public SupervisionController(SupervisionService supervisionService) {
         this.supervisionService = supervisionService;
-        this.dynamicSecurityAnalysisService = dynamicSecurityAnalysisService;
     }
 
     @GetMapping(value = "/results-count")
@@ -45,7 +42,7 @@ public class SupervisionController {
     @Operation(summary = "Delete all dynamic security analysis results from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "All dynamic security analysis results have been deleted")})
     public ResponseEntity<Void> deleteAllResults() {
-        dynamicSecurityAnalysisService.deleteAllResults();
+        supervisionService.deleteAllResults();
         return ResponseEntity.ok().build();
     }
 }
