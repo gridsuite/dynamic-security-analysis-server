@@ -206,6 +206,32 @@ class DynamicSecurityAnalysisParametersControllerTest {
     }
 
     @Test
+    void testResetParameters() throws Exception {
+        DynamicSecurityAnalysisParametersInfos parametersInfos = getParametersInfos();
+        DynamicSecurityAnalysisParametersEntity parametersEntity = new DynamicSecurityAnalysisParametersEntity(parametersInfos);
+        UUID parametersUuid = parametersRepository.save(parametersEntity).getId();
+
+        mockMvc.perform(put("/v1/parameters/{uuid}/reset", parametersUuid))
+                .andExpect(status().isOk());
+
+        Optional<DynamicSecurityAnalysisParametersEntity> resetParametersEntityOpt = parametersRepository.findById(parametersUuid);
+        assertThat(resetParametersEntityOpt).isPresent();
+        DynamicSecurityAnalysisParametersInfos resetParametersInfos = resetParametersEntityOpt.get().toDto();
+        DynamicSecurityAnalysisParametersInfos defaultParametersInfos = parametersService.getDefaultParametersValues();
+
+        assertThat(resetParametersInfos.getProvider()).isEqualTo(defaultParametersInfos.getProvider());
+        assertThat(resetParametersInfos.getScenarioDuration()).isEqualTo(defaultParametersInfos.getScenarioDuration());
+        assertThat(resetParametersInfos.getContingenciesStartTime()).isEqualTo(defaultParametersInfos.getContingenciesStartTime());
+        assertThat(resetParametersInfos.getContingencyListIds()).isNullOrEmpty();
+    }
+
+    @Test
+    void testResetParametersNotFound() throws Exception {
+        mockMvc.perform(put("/v1/parameters/{uuid}/reset", UUID.randomUUID()))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     void testDeleteParameters() throws Exception {
         DynamicSecurityAnalysisParametersInfos parametersInfos = getParametersInfos();
         DynamicSecurityAnalysisParametersEntity parametersEntity = new DynamicSecurityAnalysisParametersEntity(parametersInfos);
