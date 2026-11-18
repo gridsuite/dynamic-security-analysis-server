@@ -81,12 +81,6 @@ public class DynamicSecurityAnalysisResultService extends AbstractComputationRes
     }
 
     @Override
-    @Transactional
-    public void deleteAll() {
-        resultRepository.deleteAll();
-    }
-
-    @Override
     @Transactional(readOnly = true)
     public DynamicSecurityAnalysisStatus findStatus(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);

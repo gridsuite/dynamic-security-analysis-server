@@ -32,6 +32,9 @@ class DynamicSecurityAnalysisResultServiceTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(DynamicSecurityAnalysisResultServiceTest.class);
 
     @Autowired
+    private SupervisionService supervisionService;
+
+    @Autowired
     DynamicSecurityAnalysisResultRepository resultRepository;
 
     @Autowired
@@ -109,7 +112,7 @@ class DynamicSecurityAnalysisResultServiceTest {
                 new DynamicSecurityAnalysisResultEntity(UUID.randomUUID(), DynamicSecurityAnalysisStatus.RUNNING, null)
         ));
 
-        dynamicSecurityAnalysisResultService.deleteAll();
+        supervisionService.deleteAllResults();
         assertThat(resultRepository.findAll()).isEmpty();
     }
 }
