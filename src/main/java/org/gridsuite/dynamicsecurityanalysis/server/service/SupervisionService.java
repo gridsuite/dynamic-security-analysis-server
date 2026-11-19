@@ -9,6 +9,7 @@ package org.gridsuite.dynamicsecurityanalysis.server.service;
 
 import org.gridsuite.dynamicsecurityanalysis.server.repositories.DynamicSecurityAnalysisResultRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -23,5 +24,10 @@ public class SupervisionService {
 
     public Integer getResultsCount() {
         return (int) resultRepository.count();
+    }
+
+    @Transactional
+    public void deleteAllResults() {
+        resultRepository.deleteAll();
     }
 }

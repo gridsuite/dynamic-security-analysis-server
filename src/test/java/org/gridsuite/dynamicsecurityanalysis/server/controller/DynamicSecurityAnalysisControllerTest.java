@@ -267,6 +267,10 @@ public class DynamicSecurityAnalysisControllerTest extends AbstractDynamicSecuri
                         put("/v1/results/invalidate-status?resultUuid=" + UUID.randomUUID()))
                 .andExpect(status().isOk());
 
+        mockMvc.perform(delete("/v1/results")).andExpect(status().isBadRequest());
+        mockMvc.perform(delete("/v1/results").queryParam("resultsUuids", "")).andExpect(status().isOk());
+        assertResultStatus(runUuid, DynamicSecurityAnalysisStatus.NOT_DONE);
+
         //delete a result
         mockMvc.perform(
                 delete("/v1/results/{resultUuid}", runUuid))
@@ -282,7 +286,7 @@ public class DynamicSecurityAnalysisControllerTest extends AbstractDynamicSecuri
 
         //delete all results and except ok
         mockMvc.perform(
-                delete("/v1/results"))
+                delete("/v1/supervision/results"))
             .andExpect(status().isOk());
     }
 

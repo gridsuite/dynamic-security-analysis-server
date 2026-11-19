@@ -80,11 +80,6 @@ public class DynamicSecurityAnalysisResultService extends AbstractComputationRes
         resultRepository.deleteById(resultUuid);
     }
 
-    @Transactional
-    public void deleteAll() {
-        resultRepository.deleteAll();
-    }
-
     @Override
     @Transactional(readOnly = true)
     public DynamicSecurityAnalysisStatus findStatus(UUID resultUuid) {
