@@ -31,7 +31,8 @@ public class RestClientConfig {
         MappingJackson2HttpMessageConverter messageConverter = new MappingJackson2HttpMessageConverter(objectMapper);
 
         return restClientBuilder
-                .messageConverters(converters -> converters.add(0, messageConverter))
+                .configureMessageConverters(convertersBuilder ->
+                        convertersBuilder.configureMessageConvertersList(converters -> converters.add(messageConverter)))
                 .build();
     }
 
