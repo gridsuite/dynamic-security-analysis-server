@@ -7,7 +7,7 @@
 package org.gridsuite.dynamicsecurityanalysis.server.service.contexts;
 
 import com.powsybl.contingency.Contingency;
-import com.powsybl.dynawo.suppliers.dynamicmodels.DynamicModelConfig;
+import com.powsybl.dynawo.suppliers.dynamicmodels.DynamicModelConfigs;
 import com.powsybl.security.dynamic.DynamicSecurityAnalysisParameters;
 import lombok.Builder;
 import lombok.Getter;
@@ -33,7 +33,7 @@ public class DynamicSecurityAnalysisRunContext extends AbstractComputationRunCon
 
     private Path workDir;
     private List<Contingency> contingencies;
-    private List<DynamicModelConfig> dynamicModelContent;
+    private DynamicModelConfigs dynamicModelContent;
     private DynamicSecurityAnalysisParameters dynamicSecurityAnalysisParameters;
 
     @Builder

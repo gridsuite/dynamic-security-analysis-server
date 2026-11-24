@@ -12,7 +12,6 @@ import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
 import com.powsybl.dynamicsimulation.DynamicSimulationProvider;
 import com.powsybl.dynawo.DumpFileParameters;
 import com.powsybl.dynawo.DynawoSimulationParameters;
-import com.powsybl.dynawo.suppliers.dynamicmodels.DynamicModelConfig;
 import com.powsybl.dynawo.suppliers.dynamicmodels.DynamicModelConfigs;
 import com.powsybl.security.dynamic.DynamicSecurityAnalysisParameters;
 import org.apache.commons.collections4.CollectionUtils;
@@ -121,11 +120,10 @@ public class ParametersService {
         return dumpFile;
     }
 
-    public List<DynamicModelConfig> unZipDynamicModel(byte[] dynamicSimulationZippedDynamicModel, ObjectMapper objectMapper) {
+    public DynamicModelConfigs unZipDynamicModel(byte[] dynamicSimulationZippedDynamicModel, ObjectMapper objectMapper) {
         try {
             // unzip dynamic model
-            DynamicModelConfigs dynamicModelConfigs = Utils.unzip(dynamicSimulationZippedDynamicModel, objectMapper, DynamicModelConfigs.class);
-            return dynamicModelConfigs.dynamicModelConfigList();
+            return Utils.unzip(dynamicSimulationZippedDynamicModel, objectMapper, DynamicModelConfigs.class);
         } catch (IOException e) {
             throw new UncheckedIOException("Error occurred while unzip the dynamic model", e);
         }

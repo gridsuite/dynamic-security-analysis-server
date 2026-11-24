@@ -18,7 +18,7 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * Serialize a List<DynamicModelConfig> with "models" as root:
+ * Serialize a DynamicModelConfigs with "models" as root:
  *
  * {
  *   "models": [
@@ -37,21 +37,26 @@ import java.util.List;
  *
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
-public class DynamicModelConfigsJsonSerializer extends StdSerializer<List<DynamicModelConfig>> {
+public class DynamicModelConfigsJsonSerializer extends StdSerializer<DynamicModelConfigs> {
 
     public DynamicModelConfigsJsonSerializer() {
-        super((Class<List<DynamicModelConfig>>) (Class<?>) List.class);
+        super(DynamicModelConfigs.class);
     }
 
     @Override
-    public void serialize(List<DynamicModelConfig> configs,
+    public boolean isEmpty(SerializerProvider provider, DynamicModelConfigs configs) {
+        return configs == null || configs.dynamicModelConfigList().isEmpty();
+    }
+
+    @Override
+    public void serialize(DynamicModelConfigs configs,
                           JsonGenerator gen,
                           SerializerProvider provider) throws IOException {
 
         gen.writeStartObject();
 
         gen.writeFieldName("models");
-        writeDynamicModelConfigs(configs, gen);
+        writeDynamicModelConfigs(configs.dynamicModelConfigList(), gen);
 
         gen.writeEndObject();
     }

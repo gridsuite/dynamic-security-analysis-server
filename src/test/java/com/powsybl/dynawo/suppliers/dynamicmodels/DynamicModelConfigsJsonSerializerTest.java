@@ -29,7 +29,7 @@ class DynamicModelConfigsJsonSerializerTest {
         assertEquals(2, dynamicModelConfigs.dynamicModelConfigList().size());
 
         String dynamicModelConfigsJson = objectMapper.writerWithDefaultPrettyPrinter()
-                .writeValueAsString(dynamicModelConfigs.dynamicModelConfigList());
+                .writeValueAsString(dynamicModelConfigs);
         DynamicModelConfigs dynamicModelConfigs2 = objectMapper.readValue(dynamicModelConfigsJson, DynamicModelConfigs.class);
 
         Assertions.assertThat(dynamicModelConfigs2.dynamicModelConfigList())
