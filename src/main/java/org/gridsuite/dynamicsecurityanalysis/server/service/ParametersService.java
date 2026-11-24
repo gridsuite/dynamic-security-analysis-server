@@ -6,14 +6,13 @@
  */
 package org.gridsuite.dynamicsecurityanalysis.server.service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.contingency.Contingency;
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
 import com.powsybl.dynamicsimulation.DynamicSimulationProvider;
 import com.powsybl.dynawo.DumpFileParameters;
 import com.powsybl.dynawo.DynawoSimulationParameters;
-import com.powsybl.dynawo.suppliers.dynamicmodels.DynamicModelConfig;
+import com.powsybl.dynawo.suppliers.dynamicmodels.DynamicModelConfigs;
 import com.powsybl.security.dynamic.DynamicSecurityAnalysisParameters;
 import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.computation.dto.ReportInfos;
@@ -121,11 +120,10 @@ public class ParametersService {
         return dumpFile;
     }
 
-    public List<DynamicModelConfig> unZipDynamicModel(byte[] dynamicSimulationZippedDynamicModel, ObjectMapper objectMapper) {
+    public DynamicModelConfigs unZipDynamicModel(byte[] dynamicSimulationZippedDynamicModel, ObjectMapper objectMapper) {
         try {
             // unzip dynamic model
-            List<DynamicModelConfig> dynamicModel = Utils.unzip(dynamicSimulationZippedDynamicModel, objectMapper, new TypeReference<>() { });
-            return dynamicModel;
+            return Utils.unzip(dynamicSimulationZippedDynamicModel, objectMapper, DynamicModelConfigs.class);
         } catch (IOException e) {
             throw new UncheckedIOException("Error occurred while unzip the dynamic model", e);
         }

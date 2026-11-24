@@ -14,8 +14,8 @@ import com.powsybl.contingency.ContingenciesProvider;
 import com.powsybl.contingency.Contingency;
 import com.powsybl.dynamicsimulation.DynamicModelsSupplier;
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
-import com.powsybl.dynawo.suppliers.dynamicmodels.DynamicModelConfig;
 import com.powsybl.dynawo.suppliers.dynamicmodels.DynamicModelConfigJsonUtils;
+import com.powsybl.dynawo.suppliers.dynamicmodels.DynamicModelConfigs;
 import com.powsybl.dynawo.suppliers.dynamicmodels.DynawoModelsSupplier;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
@@ -133,7 +133,7 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
 
         // get dynamic model list from dynamic simulation server
         byte[] dynamicSimulationZippedDynamicModel = dynamicSimulationClient.getDynamicModel(runContext.getDynamicSimulationResultUuid());
-        List<DynamicModelConfig> dynamicModel = parametersService.unZipDynamicModel(dynamicSimulationZippedDynamicModel, DynamicModelConfigJsonUtils.createObjectMapper());
+        DynamicModelConfigs dynamicModel = parametersService.unZipDynamicModel(dynamicSimulationZippedDynamicModel, DynamicModelConfigJsonUtils.createObjectMapper());
 
         // get dynamic simulation parameters from dynamic simulation server
         byte[] dynamicSimulationZippedParameters = dynamicSimulationClient.getDynamicSimulationParameters(runContext.getDynamicSimulationResultUuid());
@@ -172,7 +172,7 @@ public class DynamicSecurityAnalysisWorkerService extends AbstractWorkerService<
     @Override
     public CompletableFuture<SecurityAnalysisReport> getCompletableFuture(DynamicSecurityAnalysisRunContext runContext, String provider, UUID resultUuid) {
 
-        DynamicModelsSupplier dynamicModelsSupplier = new DynawoModelsSupplier(runContext.getDynamicModelContent());
+        DynamicModelsSupplier dynamicModelsSupplier = new DynawoModelsSupplier(runContext.getDynamicModelContent().dynamicModelConfigList());
 
         List<Contingency> contingencies = runContext.getContingencies();
         ContingenciesProvider contingenciesProvider = network -> contingencies;
