@@ -199,12 +199,14 @@ public class ParametersService {
     public void updateParameters(UUID parametersUuid, DynamicSecurityAnalysisParametersInfos parametersInfos) {
         DynamicSecurityAnalysisParametersEntity entity = dynamicSecurityAnalysisParametersRepository.findById(parametersUuid)
                 .orElseThrow(() -> new ComputationException(PARAMETERS_NOT_FOUND, MSG_PARAMETERS_UUID_NOT_FOUND + parametersUuid));
-        if (parametersInfos == null) {
-            //if the parameters is null it means it's a reset to defaultValues
-            entity.update(getDefaultParametersValues());
-        } else {
-            entity.update(parametersInfos);
-        }
+        entity.update(parametersInfos);
+    }
+
+    @Transactional
+    public void resetParameters(UUID parametersUuid) {
+        DynamicSecurityAnalysisParametersEntity entity = dynamicSecurityAnalysisParametersRepository.findById(parametersUuid)
+                .orElseThrow(() -> new ComputationException(PARAMETERS_NOT_FOUND, MSG_PARAMETERS_UUID_NOT_FOUND + parametersUuid));
+        entity.update(getDefaultParametersValues());
     }
 
     @Transactional
